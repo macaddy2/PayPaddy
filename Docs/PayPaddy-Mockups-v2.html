@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PayPaddy v2 — Mobile Mockups</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0A1F1A;--forest:#14453D;--emerald:#00A86B;
+  --lime:#BFFF4F;--apricot:#FF9D6E;--coral:#FF6B4A;
+  --cream:#FAF7F2;--sand:#F0EBE1;--stone:#8B8680;
+  --charcoal:#1C1C1C;--caution:#F5A623;--alert:#E94B3C;--info:#3D7FFF;
+  --radius:14px;--radius-sm:8px;--radius-pill:999px;
+}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  background:linear-gradient(160deg,var(--ink) 0%,var(--forest) 100%);
+  color:var(--cream);min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;
+  padding:32px 16px 64px;
+}
+.page-header{text-align:center;margin-bottom:28px}
+.logo-row{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:6px}
+.logo-box{width:38px;height:38px;background:var(--lime);border-radius:8px;display:flex;align-items:center;justify-content:center;transform:rotate(-8deg);font-size:20px;color:var(--ink)}
+.page-header h1{font-size:28px;font-weight:800;letter-spacing:-.5px}
+.page-header .sub{font-size:13px;color:var(--stone);margin-top:2px}
+.tabs{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;max-width:720px;margin-bottom:24px}
+.tab-btn{padding:7px 14px;border:1px solid rgba(191,255,79,.25);border-radius:var(--radius-pill);background:transparent;color:var(--cream);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap}
+.tab-btn:hover{border-color:var(--lime);color:var(--lime)}
+.tab-btn.active{background:var(--lime);color:var(--ink);border-color:var(--lime)}
+.phone-wrap{position:relative;margin-bottom:28px}
+.phone{width:300px;height:640px;border-radius:44px;background:var(--charcoal);padding:12px;box-shadow:0 0 0 3px #333,0 20px 60px rgba(0,0,0,.45);position:relative;overflow:hidden}
+.notch{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:90px;height:22px;background:#000;border-radius:0 0 14px 14px;z-index:90}
+.phone-screen{width:100%;height:100%;border-radius:34px;overflow:hidden;position:relative}
+.screen{position:absolute;inset:0;overflow-y:auto;opacity:0;pointer-events:none;transition:opacity .35s ease;-ms-overflow-style:none;scrollbar-width:none}
+.screen::-webkit-scrollbar{display:none}
+.screen.active{opacity:1;pointer-events:auto}
+.desc-card{max-width:420px;background:rgba(255,255,255,.06);border:1px solid rgba(191,255,79,.15);border-radius:var(--radius);padding:18px 22px;margin-bottom:24px;text-align:center;font-size:13px;line-height:1.55;color:var(--sand)}
+.desc-card strong{color:var(--lime)}
+.crown-card{max-width:420px;background:var(--lime);color:var(--ink);border-radius:var(--radius);padding:20px 24px;text-align:left}
+.crown-card h3{font-size:15px;font-weight:800;margin-bottom:10px}
+.crown-card ul{list-style:none;padding:0}
+.crown-card li{font-size:12.5px;line-height:1.6;padding-left:18px;position:relative;margin-bottom:2px}
+.crown-card li::before{content:"\2726";position:absolute;left:0;color:var(--forest)}
+
+/* SPLASH */
+.s-splash{background:var(--ink);padding:0;position:relative}
+.s-splash .blobs{position:absolute;inset:0;overflow:hidden}
+.s-splash .blob{position:absolute;border-radius:50%;filter:blur(60px);opacity:.35}
+.s-splash .blob-1{width:200px;height:200px;background:var(--emerald);top:-40px;left:-60px}
+.s-splash .blob-2{width:160px;height:160px;background:var(--lime);bottom:60px;right:-50px;opacity:.2}
+.s-splash .blob-3{width:120px;height:120px;background:var(--apricot);bottom:-20px;left:40px;opacity:.15}
+.s-splash .content{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:24px 20px;text-align:center}
+.s-splash .s-logo{width:56px;height:56px;background:var(--lime);border-radius:12px;display:flex;align-items:center;justify-content:center;transform:rotate(-8deg);font-size:28px;margin-bottom:28px}
+.s-splash h2{font-size:36px;font-weight:800;line-height:1.1;margin-bottom:16px}
+.s-splash h2 .lime{color:var(--lime)}
+.s-splash .tagline{font-size:12px;color:var(--stone);line-height:1.5;max-width:220px;margin:0 auto 20px}
+.s-splash .badges{display:flex;gap:6px;justify-content:center;margin-bottom:24px;flex-wrap:wrap}
+.s-splash .badge{padding:4px 10px;border-radius:var(--radius-pill);border:1px solid rgba(191,255,79,.2);font-size:9.5px;color:var(--lime);font-weight:600}
+.s-splash .cta{width:100%;max-width:220px;padding:14px;border-radius:var(--radius);background:var(--lime);color:var(--ink);font-size:15px;font-weight:800;border:none;cursor:pointer;margin-bottom:10px}
+.s-splash .signin{font-size:12px;color:var(--stone);text-decoration:underline}
+
+/* HOME */
+.s-home{background:var(--cream);color:var(--charcoal)}
+.s-home .hdr{background:linear-gradient(135deg,var(--ink),var(--forest));border-radius:0 0 24px 24px;padding:38px 16px 16px;color:var(--cream)}
+.s-home .hdr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.s-home .avatar{width:36px;height:36px;border-radius:50%;background:var(--apricot);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--ink)}
+.s-home .greeting{flex:1;margin-left:10px;font-size:15px;font-weight:600}
+.s-home .bell{position:relative;font-size:18px}
+.s-home .bell-dot{position:absolute;top:-2px;right:-2px;width:7px;height:7px;background:var(--coral);border-radius:50%}
+.s-home .escrow-card{background:linear-gradient(135deg,var(--emerald),#008f5a);border-radius:var(--radius);padding:16px;margin-top:8px}
+.s-home .escrow-label{font-size:10px;letter-spacing:1px;color:rgba(255,255,255,.7);text-transform:uppercase}
+.s-home .escrow-amount{font-size:26px;font-weight:800;margin:4px 0}
+.s-home .trinity-row{display:flex;align-items:center;gap:6px;margin-top:6px}
+.s-home .trinity-badge{padding:3px 8px;background:rgba(255,255,255,.2);border-radius:var(--radius-pill);font-size:9px;font-weight:700}
+.s-home .trust-bar{height:6px;background:rgba(255,255,255,.15);border-radius:3px;margin-top:8px;overflow:hidden}
+.s-home .trust-fill{height:100%;background:var(--lime);border-radius:3px;width:94%}
+.s-home .trust-text{font-size:9px;color:rgba(255,255,255,.6);margin-top:3px;text-align:right}
+.s-home .body{padding:14px 16px 80px}
+.s-home .new-deal{width:100%;padding:14px;border-radius:var(--radius);background:var(--ink);color:var(--cream);font-size:14px;font-weight:700;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px}
+.s-home .new-deal .plus{width:24px;height:24px;background:var(--lime);border-radius:6px;color:var(--ink);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px}
+.s-home .chips{display:flex;gap:6px;margin-bottom:16px}
+.s-home .chip{flex:1;padding:10px 6px;border-radius:var(--radius-sm);border:1px solid var(--sand);text-align:center;font-size:11px;font-weight:600;background:#fff;color:var(--charcoal)}
+.s-home .section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--stone);margin-bottom:8px}
+.s-home .deal-item{background:#fff;border-radius:var(--radius-sm);padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;border-left:3px solid transparent}
+.s-home .deal-item.urgent{border-left-color:var(--coral)}
+.s-home .deal-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.s-home .deal-info{flex:1}
+.s-home .deal-info .name{font-size:13px;font-weight:600}
+.s-home .deal-info .meta{font-size:10px;color:var(--stone)}
+.s-home .deal-amt{font-size:13px;font-weight:700;color:var(--ink)}
+.s-home .bottom-nav{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:space-around;background:#fff;padding:10px 0 14px;border-top:1px solid var(--sand);font-size:9px;font-weight:600;color:var(--stone)}
+.s-home .bottom-nav .nav-item{text-align:center;position:relative}
+.s-home .bottom-nav .nav-item.active{color:var(--emerald)}
+.s-home .bottom-nav .nav-icon{font-size:18px;display:block;margin-bottom:2px}
+.s-home .chat-badge{position:absolute;top:-4px;right:-6px;width:16px;height:16px;background:var(--coral);border-radius:50%;font-size:9px;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700}
+
+/* CREATE DEAL */
+.s-create{background:var(--cream);color:var(--charcoal);padding:16px}
+.s-create .top-bar{display:flex;align-items:center;gap:10px;margin-top:24px;margin-bottom:4px}
+.s-create .back{font-size:18px;cursor:pointer}
+.s-create h3{font-size:18px;font-weight:800}
+.s-create .sub{font-size:12px;color:var(--stone);margin-bottom:16px}
+.s-create .suggest-card{background:var(--ink);color:var(--cream);border-radius:var(--radius);padding:14px;margin-bottom:14px}
+.s-create .suggest-label{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--lime);font-weight:700;margin-bottom:4px}
+.s-create .suggest-text{font-size:13px;font-weight:600}
+.s-create .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.s-create .grid-item{background:#fff;border-radius:var(--radius-sm);padding:16px 12px;text-align:center;border:1px solid var(--sand);position:relative}
+.s-create .grid-item .icon{font-size:24px;margin-bottom:6px}
+.s-create .grid-item .label{font-size:12px;font-weight:700}
+.s-create .popular{position:absolute;top:6px;right:6px;font-size:8px;background:var(--lime);color:var(--ink);padding:2px 6px;border-radius:var(--radius-pill);font-weight:700}
+.s-create .custom-card{background:var(--charcoal);color:var(--cream);border-radius:var(--radius);padding:14px;text-align:center;margin-bottom:12px}
+.s-create .custom-card .label{font-size:13px;font-weight:700}
+.s-create .custom-card .sublabel{color:var(--stone);font-size:11px}
+.s-create .info-box{background:rgba(0,168,107,.08);border:1px solid rgba(0,168,107,.2);border-radius:var(--radius-sm);padding:10px 12px;font-size:11px;color:var(--forest);line-height:1.5}
+
+/* DEAL ROOM */
+.s-room{background:var(--cream);color:var(--charcoal)}
+.s-room .room-hdr{background:var(--ink);padding:36px 16px 14px;color:var(--cream)}
+.s-room .room-hdr h3{font-size:16px;font-weight:700}
+.s-room .room-hdr .id{font-size:10px;color:var(--stone)}
+.s-room .vault{margin:12px 16px;background:linear-gradient(135deg,var(--ink),var(--forest));border-radius:var(--radius);padding:16px;color:var(--cream);text-align:center}
+.s-room .vault .lock{font-size:28px;margin-bottom:4px}
+.s-room .vault .vlabel{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.6)}
+.s-room .vault .vamt{font-size:24px;font-weight:800;margin:2px 0}
+.s-room .vault .vbank{font-size:10px;color:rgba(255,255,255,.5)}
+.s-room .progress{display:flex;align-items:flex-start;margin:14px 16px;gap:2px}
+.s-room .step{flex:1;text-align:center}
+.s-room .step .dot{width:22px;height:22px;border-radius:50%;margin:0 auto 4px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700}
+.s-room .step .dot.done{background:var(--lime);color:var(--ink)}
+.s-room .step .dot.active{background:var(--apricot);color:var(--ink)}
+.s-room .step .dot.pending{background:var(--sand);color:var(--stone)}
+.s-room .step .slabel{font-size:8px;color:var(--stone)}
+.s-room .parties{display:flex;align-items:center;justify-content:center;gap:12px;margin:10px 16px;padding:10px;background:#fff;border-radius:var(--radius-sm)}
+.s-room .party{text-align:center}
+.s-room .party .pavatar{width:32px;height:32px;border-radius:50%;margin:0 auto 3px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.s-room .party .pname{font-size:9px;font-weight:600}
+.s-room .party .prole{font-size:8px}
+.s-room .divider{width:1px;height:36px;background:var(--sand)}
+.s-room .feed{padding:8px 16px}
+.s-room .feed-item{margin-bottom:8px;font-size:11px;line-height:1.5}
+.s-room .sys-event{background:rgba(0,168,107,.08);border-radius:var(--radius-sm);padding:8px 10px;color:var(--forest)}
+.s-room .chat-msg{background:#fff;border-radius:var(--radius-sm);padding:8px 10px}
+.s-room .chat-msg .sender{font-size:9px;font-weight:700;color:var(--emerald)}
+.s-room .action-bar{position:absolute;bottom:0;left:0;right:0;display:flex;gap:6px;padding:10px 16px 14px;background:var(--cream);border-top:1px solid var(--sand)}
+.s-room .action-bar .btn-confirm{flex:1;padding:10px;border-radius:var(--radius-sm);background:var(--emerald);color:#fff;font-size:12px;font-weight:700;border:none;cursor:pointer}
+.s-room .action-bar .btn-chat{padding:10px 14px;border-radius:var(--radius-sm);background:#fff;border:1px solid var(--sand);font-size:14px;cursor:pointer}
+.s-room .action-bar .btn-report{padding:10px;border-radius:var(--radius-sm);background:rgba(255,107,74,.1);color:var(--coral);border:1px solid rgba(255,107,74,.2);font-size:11px;font-weight:600;cursor:pointer}
+
+/* TRINITY */
+.s-verify{background:var(--ink);color:var(--cream);padding:16px;display:flex;flex-direction:column;height:100%}
+.s-verify .step-label{font-size:10px;color:var(--stone);margin-top:28px;margin-bottom:6px}
+.s-verify h3{font-size:22px;font-weight:800;margin-bottom:4px}
+.s-verify .sub{font-size:12px;color:var(--stone);margin-bottom:16px}
+.s-verify .seg-bar{display:flex;gap:4px;margin-bottom:20px}
+.s-verify .seg{flex:1;height:4px;border-radius:2px}
+.s-verify .seg.done{background:var(--lime)}
+.s-verify .seg.active{background:var(--apricot)}
+.s-verify .seg.pending{background:rgba(255,255,255,.12)}
+.s-verify .input-card{background:rgba(255,255,255,.05);border:1.5px solid var(--apricot);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.s-verify .input-label{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--apricot);font-weight:700;margin-bottom:10px}
+.s-verify .digits{display:flex;gap:4px;justify-content:center}
+.s-verify .digit{width:22px;height:30px;border-radius:4px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
+.s-verify .digit.filled{color:var(--cream)}
+.s-verify .digit.cursor{border-color:var(--apricot);box-shadow:0 0 0 1px var(--apricot)}
+.s-verify .digit.empty{color:transparent}
+.s-verify .privacy{font-size:9px;color:var(--stone);text-align:center;margin-top:8px}
+.s-verify .why-card{background:rgba(255,255,255,.04);border-radius:var(--radius-sm);padding:12px;margin-bottom:16px;display:flex;gap:10px;align-items:flex-start}
+.s-verify .why-icon{font-size:22px}
+.s-verify .why-card h4{font-size:12px;font-weight:700;margin-bottom:3px}
+.s-verify .why-card p{font-size:10px;color:var(--stone);line-height:1.5}
+.s-verify .cta-v{margin-top:auto;width:100%;padding:14px;border-radius:var(--radius);background:var(--lime);color:var(--ink);font-size:14px;font-weight:800;border:none;cursor:pointer}
+
+/* DISPUTE */
+.s-dispute{background:var(--cream);color:var(--charcoal)}
+.s-dispute .dh{background:var(--coral);padding:36px 16px 16px;color:#fff}
+.s-dispute .dh h3{font-size:18px;font-weight:800}
+.s-dispute .dh p{font-size:11px;opacity:.85;margin-top:2px}
+.s-dispute .dbody{padding:14px 16px 80px}
+.s-dispute .safe-card{background:rgba(0,168,107,.08);border:1px solid rgba(0,168,107,.2);border-radius:var(--radius);padding:12px;margin-bottom:14px;text-align:center}
+.s-dispute .safe-card .amt{font-size:18px;font-weight:800;color:var(--emerald)}
+.s-dispute .safe-card .note{font-size:10px;color:var(--stone);margin-top:2px}
+.s-dispute .issues{list-style:none;margin-bottom:14px}
+.s-dispute .issue{background:#fff;border-radius:var(--radius-sm);padding:12px;margin-bottom:6px;font-size:12px;font-weight:600;border:1.5px solid var(--sand);display:flex;align-items:center;gap:8px;cursor:pointer}
+.s-dispute .issue.selected{border-color:var(--coral);background:rgba(255,107,74,.04)}
+.s-dispute .issue .check{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--sand);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
+.s-dispute .issue.selected .check{background:var(--coral);border-color:var(--coral);color:#fff}
+.s-dispute .evidence{display:flex;gap:8px;margin-bottom:14px}
+.s-dispute .ev-box{width:72px;height:72px;border:2px dashed var(--sand);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--stone)}
+.s-dispute .submit-btn{width:100%;padding:14px;border-radius:var(--radius);background:var(--coral);color:#fff;font-size:14px;font-weight:700;border:none;cursor:pointer;margin-bottom:8px}
+.s-dispute .human-note{font-size:10px;color:var(--stone);text-align:center}
+
+/* USSD */
+.s-ussd{background:var(--ink);color:var(--cream);padding:16px}
+.s-ussd .ussd-hdr{margin-top:28px;margin-bottom:8px}
+.s-ussd h3{font-size:20px;font-weight:800}
+.s-ussd .banner{background:var(--apricot);color:var(--ink);border-radius:var(--radius-sm);padding:10px;text-align:center;font-size:13px;font-weight:700;margin-bottom:16px}
+.s-ussd .code-card{background:#fff;border-radius:var(--radius);padding:16px;margin-bottom:16px}
+.s-ussd .code-display{background:var(--ink);border-radius:var(--radius-sm);padding:16px;text-align:center;margin-bottom:10px}
+.s-ussd .code-text{font-family:'Courier New',monospace;font-size:26px;font-weight:800;color:var(--lime);letter-spacing:2px}
+.s-ussd .copy-btn{display:block;margin:0 auto;padding:6px 20px;border-radius:var(--radius-pill);background:var(--sand);border:none;font-size:11px;font-weight:600;cursor:pointer;color:var(--charcoal)}
+.s-ussd .expiry{text-align:center;margin:10px 0;font-size:12px;color:var(--charcoal)}
+.s-ussd .expiry .timer{color:var(--coral);font-weight:800;font-size:16px}
+.s-ussd .ustep{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px}
+.s-ussd .ustep-num{width:24px;height:24px;border-radius:50%;background:var(--lime);color:var(--ink);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
+.s-ussd .ustep-text{font-size:12px;line-height:1.5}
+.s-ussd .agent-card{background:rgba(255,255,255,.06);border:1px solid rgba(191,255,79,.15);border-radius:var(--radius);padding:14px;margin-top:8px}
+.s-ussd .agent-card h4{font-size:13px;font-weight:700;margin-bottom:3px}
+.s-ussd .agent-card p{font-size:11px;color:var(--stone)}
+
+/* DESIGN NOTES */
+.s-notes{background:var(--ink);color:var(--cream);padding:16px}
+.s-notes h3{font-size:18px;font-weight:800;margin:28px 0 12px}
+.s-notes .note-card{background:rgba(255,255,255,.05);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:6px}
+.s-notes .note-card h4{font-size:12px;font-weight:700;color:var(--lime);margin-bottom:2px}
+.s-notes .note-card p{font-size:10px;color:var(--stone);line-height:1.5}
+
+.key-hint{margin-top:18px;font-size:11px;color:var(--stone);text-align:center}
+.key-hint kbd{display:inline-block;padding:2px 7px;border:1px solid rgba(255,255,255,.15);border-radius:4px;font-family:inherit;font-size:11px;margin:0 2px}
+@media(max-width:380px){.phone{width:270px;height:580px;border-radius:38px}.tabs{gap:4px}.tab-btn{padding:5px 10px;font-size:11px}}
+</style>
+</head>
+<body>
+<header class="page-header">
+  <div class="logo-row"><div class="logo-box">&#x1f512;</div><h1>PayPaddy v2</h1></div>
+  <div class="sub">Research-informed redesign &middot; &lsquo;No wahala&rsquo;</div>
+</header>
+<nav class="tabs" id="tabBar"></nav>
+<div class="phone-wrap"><div class="phone"><div class="notch"></div><div class="phone-screen" id="phoneScreen">
+
+<\!-- 0: SPLASH -->
+<div class="screen s-splash active" data-idx="0">
+  <div class="blobs"><div class="blob blob-1"></div><div class="blob blob-2"></div><div class="blob blob-3"></div></div>
+  <div class="content">
+    <div class="s-logo">&#x1f512;</div>
+    <h2>No wahala.<br><span class="lime">Your money</span><br>is safe.</h2>
+    <p class="tagline">The trust layer for any deal &mdash; commerce, contracts, bets, services. If one side no deliver, you no lose money.</p>
+    <div class="badges"><span class="badge">&#x2713; CBN Licensed</span><span class="badge">&#x2713; NDIC Insured</span><span class="badge">&#x2713; NDPR</span></div>
+    <button class="cta">Create Account</button>
+    <span class="signin">Sign in</span>
+  </div>
+</div>
+
+<\!-- 1: HOME -->
+<div class="screen s-home" data-idx="1">
+  <div class="hdr">
+    <div class="hdr-top">
+      <div class="avatar">AO</div>
+      <div class="greeting">Welcome back, Ade &#x1f44b;</div>
+      <div class="bell">&#x1f514;<span class="bell-dot"></span></div>
+    </div>
+    <div class="escrow-card">
+      <div class="escrow-label">Locked in Escrow</div>
+      <div class="escrow-amount">&#8358;2,450,000</div>
+      <div class="trinity-row"><span class="trinity-badge">TRINITY &#x2713;</span><span style="font-size:10px;color:rgba(255,255,255,.6)">Trust Score</span></div>
+      <div class="trust-bar"><div class="trust-fill"></div></div>
+      <div class="trust-text">850 / 900 &middot; 94%</div>
+    </div>
+  </div>
+  <div class="body">
+    <button class="new-deal"><span class="plus">+</span> Start a New Deal</button>
+    <div class="chips"><div class="chip">Join Deal</div><div class="chip">Quick Pay</div><div class="chip">My Paddys</div></div>
+    <div class="section-title">Active Deals</div>
+    <div class="deal-item urgent">
+      <div class="deal-icon" style="background:rgba(255,107,74,.1)">&#x1f4e6;</div>
+      <div class="deal-info"><div class="name">MacBook Pro M3</div><div class="meta">TechHub CV &middot; Awaiting delivery</div></div>
+      <div class="deal-amt">&#8358;1.25M</div>
+    </div>
+    <div class="deal-item">
+      <div class="deal-icon" style="background:rgba(0,168,107,.1)">&#x1f3e0;</div>
+      <div class="deal-info"><div class="name">Apartment Deposit</div><div class="meta">LagosHomes &middot; Funded</div></div>
+      <div class="deal-amt">&#8358;800K</div>
+    </div>
+    <div class="deal-item">
+      <div class="deal-icon" style="background:rgba(191,255,79,.12)">&#x1f3b2;</div>
+      <div class="deal-info"><div class="name">Super Eagles Bet</div><div class="meta">@ChuksD &middot; Match day</div></div>
+      <div class="deal-amt">&#8358;400K</div>
+    </div>
+  </div>
+  <nav class="bottom-nav">
+    <div class="nav-item active"><span class="nav-icon">&#x1f3e0;</span>Home</div>
+    <div class="nav-item"><span class="nav-icon">&#x1f4cb;</span>Deals</div>
+    <div class="nav-item" style="position:relative"><span class="nav-icon">&#x1f4ac;</span>Chat<span class="chat-badge">3</span></div>
+    <div class="nav-item"><span class="nav-icon">&#x1f464;</span>Me</div>
+  </nav>
+</div>
+
+<\!-- 2: CREATE DEAL -->
+<div class="screen s-create" data-idx="2">
+  <div class="top-bar"><span class="back">&larr;</span><h3>Start a Deal</h3></div>
+  <p class="sub">Wetin you wan do?</p>
+  <div class="suggest-card"><div class="suggest-label">Suggested</div><div class="suggest-text">Continue MacBook deal draft? &#x1f4bb;</div></div>
+  <div class="grid">
+    <div class="grid-item"><span class="popular">POPULAR</span><div class="icon">&#x1f6d2;</div><div class="label">Buy / Sell</div></div>
+    <div class="grid-item"><div class="icon">&#x1f6e0;&#xfe0f;</div><div class="label">Service</div></div>
+    <div class="grid-item"><div class="icon">&#x1f4dd;</div><div class="label">Contract</div></div>
+    <div class="grid-item"><div class="icon">&#x1f3b2;</div><div class="label">Bet / Wager</div></div>
+  </div>
+  <div class="custom-card"><div class="label">&#x2728; Custom Deal</div><div class="sublabel">Build your own from scratch</div></div>
+  <div class="info-box">&#x1f512; Every deal is held in escrow. Funds only move when both sides agree &mdash; or a human mediator decides.</div>
+</div>
+
+<\!-- 3: DEAL ROOM -->
+<div class="screen s-room" data-idx="3">
+  <div class="room-hdr"><h3>MacBook Pro Purchase</h3><span class="id">#PP-4829</span></div>
+  <div class="vault">
+    <div class="lock">&#x1f512;</div>
+    <div class="vlabel">Locked in Escrow</div>
+    <div class="vamt">&#8358;1,250,000</div>
+    <div class="vbank">with GTBank (CBN Licensed)</div>
+  </div>
+  <div class="progress">
+    <div class="step"><div class="dot done">&#x2713;</div><div class="slabel">Created</div></div>
+    <div class="step"><div class="dot done">&#x2713;</div><div class="slabel">Funded</div></div>
+    <div class="step"><div class="dot active">3</div><div class="slabel">Delivery</div></div>
+    <div class="step"><div class="dot pending">4</div><div class="slabel">Done</div></div>
+  </div>
+  <div class="parties">
+    <div class="party"><div class="pavatar" style="background:var(--apricot);color:var(--ink)">AO</div><div class="pname">You</div><div class="prole" style="color:var(--emerald)">Buyer &middot; Paid</div></div>
+    <div class="divider"></div>
+    <div class="party"><div class="pavatar" style="background:var(--info);color:#fff">TH</div><div class="pname">TechHub CV</div><div class="prole" style="color:var(--apricot)">Seller &middot; Delivering</div></div>
+  </div>
+  <div class="feed">
+    <div class="feed-item sys-event">&#x2713; Funds verified &amp; locked &mdash; Apr 15, 09:42</div>
+    <div class="feed-item chat-msg"><span class="sender">TechHub CV</span><br>Item shipped via DHL &mdash; tracking: NGR38291</div>
+    <div class="feed-item sys-event">&#x1f4e6; Delivery expected Apr 18</div>
+  </div>
+  <div class="action-bar">
+    <button class="btn-confirm">&#x2713; I got the item</button>
+    <button class="btn-chat">&#x1f4ac;</button>
+    <button class="btn-report">&#x26a0;&#xfe0f; Report</button>
+  </div>
+</div>
+
+<\!-- 4: TRINITY VERIFICATION -->
+<div class="screen s-verify" data-idx="4">
+  <div class="step-label">Step 2 of 3</div>
+  <h3>One quick verification left</h3>
+  <p class="sub">Your NIN, and we dey go &#x1f680;</p>
+  <div class="seg-bar"><div class="seg done"></div><div class="seg active"></div><div class="seg pending"></div></div>
+  <div class="input-card">
+    <div class="input-label">Your NIN</div>
+    <div class="digits">
+      <div class="digit filled">&bull;</div><div class="digit filled">&bull;</div><div class="digit filled">&bull;</div><div class="digit filled">&bull;</div><div class="digit filled">&bull;</div>
+      <div class="digit cursor"></div><div class="digit empty"></div><div class="digit empty"></div><div class="digit empty"></div><div class="digit empty"></div><div class="digit empty"></div>
+    </div>
+    <p class="privacy">&#x1f512; Encrypted &amp; stored with NDPR-compliant partner</p>
+  </div>
+  <div class="why-card">
+    <div class="why-icon">&#x1f6e1;&#xfe0f;</div>
+    <div><h4>Why 3 checks?</h4><p>BVN confirms your bank. NIN confirms your identity. Face match locks it all together. This keeps fraudsters out and your money safe.</p></div>
+  </div>
+  <button class="cta-v">Verify NIN &rarr;</button>
+</div>
+
+<\!-- 5: DISPUTE -->
+<div class="screen s-dispute" data-idx="5">
+  <div class="dh"><h3>Report a Problem</h3><p>Money no go waka. Tell us wetin happen.</p></div>
+  <div class="dbody">
+    <div class="safe-card">
+      <div style="font-size:20px;margin-bottom:4px">&#x1f512;</div>
+      <div class="amt">Your &#8358;1,250,000 is safe</div>
+      <div class="note">Average resolution: 24 hours</div>
+    </div>
+    <ul class="issues">
+      <li class="issue selected"><span class="check">&#x2713;</span>Item never arrived</li>
+      <li class="issue"><span class="check"></span>Item not as described</li>
+      <li class="issue"><span class="check"></span>Incomplete delivery</li>
+      <li class="issue"><span class="check"></span>Seller unresponsive</li>
+      <li class="issue"><span class="check"></span>Something else</li>
+    </ul>
+    <div style="font-size:11px;font-weight:600;color:var(--stone);margin-bottom:6px">Upload Evidence</div>
+    <div class="evidence"><div class="ev-box">+</div><div class="ev-box">+</div><div class="ev-box">+</div></div>
+    <button class="submit-btn">Submit Dispute</button>
+    <p class="human-note">A human paddy (not bot) will review within 24h</p>
+  </div>
+</div>
+
+<\!-- 6: USSD OFFLINE -->
+<div class="screen s-ussd" data-idx="6">
+  <div class="ussd-hdr"><h3>Pay Offline</h3></div>
+  <div class="banner">Data no dey? No wahala. &#x1f4f1;</div>
+  <div class="code-card">
+    <div class="code-display"><div class="code-text">*999*1*4829#</div></div>
+    <button class="copy-btn">&#x1f4cb; Copy Code</button>
+    <div class="expiry">Expires in <span class="timer">04:52</span></div>
+  </div>
+  <div>
+    <div class="ustep"><div class="ustep-num">1</div><div class="ustep-text"><strong>Dial the code</strong> on your phone dialer &mdash; no internet needed</div></div>
+    <div class="ustep"><div class="ustep-num">2</div><div class="ustep-text"><strong>Enter your PIN</strong> when prompted by your bank</div></div>
+    <div class="ustep"><div class="ustep-num">3</div><div class="ustep-text"><strong>Get SMS confirmation</strong> &mdash; deal funded instantly</div></div>
+  </div>
+  <div class="agent-card"><h4>&#x1f4cd; No SIM? Find an Agent</h4><p>12 PayPaddy agents within 2km of you</p></div>
+</div>
+
+<\!-- 7: DESIGN NOTES -->
+<div class="screen s-notes" data-idx="7">
+  <h3>Why these changes?</h3>
+  <div class="note-card"><h4>&#x1f1f3;&#x1f1ec; Nigerian Voice</h4><p>Pidgin English copy ("no wahala", "wetin happen") feels familiar and builds instant trust with Nigerian users.</p></div>
+  <div class="note-card"><h4>&#x1f7e2; Green, Not Red</h4><p>Green = money = go. We lead with emerald for safety cues. Red only appears for genuine problems.</p></div>
+  <div class="note-card"><h4>&#x1f524; Larger Type</h4><p>Hero text at 36px+. Critical info (amounts, codes) never below 16px. Readability on bright Lagos sunlight.</p></div>
+  <div class="note-card"><h4>&#x261d;&#xfe0f; One Primary Action</h4><p>Every screen has exactly ONE dominant CTA. Reduces cognitive load and speeds completion.</p></div>
+  <div class="note-card"><h4>&#x1f6e1;&#xfe0f; Trust Signals First</h4><p>CBN, NDIC, NDPR badges appear before any CTA. Vault metaphor in deal rooms. Bank partner always visible.</p></div>
+  <div class="note-card"><h4>&#x1f4f4; Offline-First</h4><p>USSD codes, SMS fallbacks, agent finder. 40% of target users are on 2G or intermittent data.</p></div>
+  <div class="note-card"><h4>&#x26a1; Fast Dispute Path</h4><p>Reassurance FIRST, then problem selection. "Human not bot" promise. 24h SLA prominently displayed.</p></div>
+  <div class="note-card"><h4>&#x1f50d; Scannable Deal States</h4><p>4-stage progress with color-coded dots. Urgent deals get red edge-bar. Vault card shows exact amount held.</p></div>
+</div>
+
+</div></div></div>
+
+<div class="desc-card" id="descCard"></div>
+<div class="crown-card">
+  <h3>&#x1f451; Crown Jewel Differentiators</h3>
+  <ul>
+    <li>Vault-metaphor Deal Room with bank partner transparency</li>
+    <li>Trinity (BVN + NIN + Face) verification in Pidgin English</li>
+    <li>USSD-first offline payment &mdash; hero code, agent finder fallback</li>
+    <li>Dispute flow that reassures before it interrogates</li>
+    <li>WhatsApp-style chat embedded in every deal</li>
+    <li>Trust Score &amp; escrow balance on home &mdash; safety at a glance</li>
+    <li>Pidgin copy throughout &mdash; "no wahala" as brand signature</li>
+    <li>One primary CTA per screen &mdash; zero decision fatigue</li>
+  </ul>
+</div>
+<div class="key-hint"><kbd>&larr;</kbd> <kbd>&rarr;</kbd> arrow keys to navigate screens</div>
+
+<script>
+(function(){
+  var T=['Splash','Home','Create Deal','Deal Room','Trinity','Dispute','USSD','Design Notes'];
+  var D=[
+    "Splash reframes the value prop in Nigerian Pidgin: <strong>\u2018No wahala. Your money is safe.\u2019</strong> Trust badges (CBN, NDIC, NDPR) appear above the CTA \u2014 compliance-first design.",
+    "Home leads with <strong>unified escrow balance + trust score</strong>. Primary \u2018New Deal\u2019 button is dominant. Urgent deals flagged with <strong>red edge-bar</strong>.",
+    "Smart entry: AI suggests continuing drafts. <strong>2\u00d72 grid</strong> for common deal types. Custom deal gets distinct dark treatment.",
+    "The crown jewel. <strong>Vault metaphor</strong> with bank partner name. 4-stage milestone progress. WhatsApp-style chat built into the deal.",
+    "Trinity verification uses Pidgin copy <strong>(\u2018we dey go\u2019)</strong> to feel human. <strong>\u2018Why 3 checks?\u2019</strong> explains reasoning transparently.",
+    "Dispute flow <strong>LEADS with reassurance</strong> before asking what went wrong. \u201824h resolution \u00b7 human not bot\u2019 sets expectation.",
+    "USSD mode makes the <strong>CODE the hero</strong> (26px monospace). Agent finder as offline fallback. Critical for 2G/rural reach.",
+    "Design rationale for each change \u2014 based on <strong>Nigerian fintech UX research</strong> and escrow fraud pain points."
+  ];
+  var c=0,tb=document.getElementById('tabBar'),dc=document.getElementById('descCard'),sc=document.querySelectorAll('.screen');
+  T.forEach(function(n,i){var b=document.createElement('button');b.className='tab-btn'+(i===0?' active':'');b.textContent=n;b.onclick=function(){go(i)};tb.appendChild(b)});
+  function go(i){if(i<0||i>=sc.length)return;c=i;sc.forEach(function(s,j){s.classList.toggle('active',j===i)});var bs=tb.querySelectorAll('.tab-btn');bs.forEach(function(b,j){b.classList.toggle('active',j===i)});bs[i].scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});dc.innerHTML=D[i]}
+  dc.innerHTML=D[0];
+  document.addEventListener('keydown',function(e){if(e.key==='ArrowRight')go(c+1);else if(e.key==='ArrowLeft')go(c-1)});
+})();
+</script>
+</body>
+</html>
