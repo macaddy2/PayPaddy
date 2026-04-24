@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PayPaddy — Mobile UI Kit</title>
+<link rel="stylesheet" href="../../colors_and_type.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Manrope',-apple-system,sans-serif;background:linear-gradient(160deg,#0A1F1A 0%,#14453D 100%);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:32px 16px 64px;color:#FAF7F2}
+.hdr{text-align:center;margin-bottom:24px}
+.hdr h1{font-size:28px;font-weight:900;letter-spacing:-.8px}
+.hdr p{font-size:13px;color:#8B8680;margin-top:4px}
+.tabs{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;max-width:720px;margin-bottom:24px}
+.tab{padding:7px 14px;border:1px solid rgba(191,255,79,.25);border-radius:999px;background:transparent;color:#FAF7F2;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;font-family:inherit}
+.tab:hover{border-color:#BFFF4F;color:#BFFF4F}
+.tab.active{background:#BFFF4F;color:#0A1F1A;border-color:#BFFF4F}
+.phone{width:300px;height:640px;border-radius:44px;background:#1C1C1C;padding:12px;box-shadow:0 0 0 3px #333,0 20px 60px rgba(0,0,0,.45);position:relative;overflow:hidden}
+.notch{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:90px;height:22px;background:#000;border-radius:0 0 14px 14px;z-index:90}
+.screen-wrap{width:100%;height:100%;border-radius:34px;overflow:hidden;position:relative;background:#FAF7F2}
+.screen{position:absolute;inset:0;overflow-y:auto;opacity:0;pointer-events:none;transition:opacity .35s ease;-ms-overflow-style:none;scrollbar-width:none}
+.screen::-webkit-scrollbar{display:none}
+.screen.active{opacity:1;pointer-events:auto}
+.hint{margin-top:18px;font-size:11px;color:#8B8680;text-align:center}
+.hint kbd{display:inline-block;padding:2px 7px;border:1px solid rgba(255,255,255,.15);border-radius:4px;font-family:inherit;font-size:11px;margin:0 2px}
+</style>
+</head>
+<body>
+<div class="hdr"><h1>PayPaddy · Mobile</h1><p>Interactive click-thru · tap tabs or use arrow keys</p></div>
+<nav class="tabs" id="tabs"></nav>
+<div class="phone"><div class="notch"></div><div class="screen-wrap" id="wrap"></div></div>
+<div class="hint"><kbd>←</kbd> <kbd>→</kbd> navigate screens</div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="./components/primitives.jsx"></script>
+<script type="text/babel" src="./components/Splash.jsx"></script>
+<script type="text/babel" src="./components/Onboarding.jsx"></script>
+<script type="text/babel" src="./components/Home.jsx"></script>
+<script type="text/babel" src="./components/CreateDeal.jsx"></script>
+<script type="text/babel" src="./components/DealRoom.jsx"></script>
+<script type="text/babel" src="./components/Trinity.jsx"></script>
+<script type="text/babel" src="./components/Dispute.jsx"></script>
+<script type="text/babel" src="./components/USSD.jsx"></script>
+<script type="text/babel" src="./components/Agents.jsx"></script>
+<script type="text/babel" src="./components/Merchant.jsx"></script>
+<script type="text/babel" src="./components/App.jsx"></script>
+</body>
+</html>

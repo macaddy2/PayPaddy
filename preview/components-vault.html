@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><style>
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Manrope',sans-serif}
+body{width:700px;background:#FAF7F2;padding:24px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.vault{background:linear-gradient(135deg,#14453D 0%,#00A86B 100%);border-radius:20px;padding:20px;color:#FAF7F2;position:relative;overflow:hidden}
+.vault::after{content:"";position:absolute;top:-30px;right:-30px;width:100px;height:100px;border-radius:50%;background:#BFFF4F;opacity:.15}
+.lock{width:48px;height:48px;border-radius:14px;background:#BFFF4F;display:grid;place-items:center;font-size:22px;margin-bottom:14px;position:relative;z-index:2}
+.eye{font-size:11px;font-weight:700;letter-spacing:.5px;color:rgba(255,255,255,.7);margin-bottom:4px;position:relative;z-index:2}
+.amt{font-size:32px;font-weight:900;letter-spacing:-1px;position:relative;z-index:2;font-variant-numeric:tabular-nums}
+.bank{font-size:11px;color:#BFFF4F;font-weight:600;margin-top:4px;position:relative;z-index:2}
+.dark{background:#0A1F1A}
+.dark .bank{color:#BFFF4F}
+</style></head><body>
+  <div class="vault">
+    <div class="lock">🔒</div>
+    <div class="eye">LOCKED IN ESCROW</div>
+    <div class="amt">₦1,250,000</div>
+    <div class="bank">with GTBank (CBN Licensed)</div>
+  </div>
+  <div class="vault dark">
+    <div class="lock">🔒</div>
+    <div class="eye">TOTAL ESCROW</div>
+    <div class="amt">₦2,450,000</div>
+    <div class="bank">across 4 active deals</div>
+  </div>
+</body></html>

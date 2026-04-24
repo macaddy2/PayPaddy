@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><style>
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Manrope',sans-serif}
+body{width:700px;background:#0A1F1A;padding:24px;display:flex;flex-direction:column;gap:12px}
+label{font-size:11px;color:#FF9D6E;font-weight:800;letter-spacing:.5px;display:block;margin-bottom:8px}
+.input-dark{background:rgba(255,255,255,.05);border:1.5px solid #FF9D6E;border-radius:18px;padding:18px}
+.digits{display:flex;gap:6px}
+.digit{flex:1;height:40px;background:rgba(255,255,255,.1);border-radius:8px;display:grid;place-items:center;font-size:16px;font-weight:800;color:#8B8680}
+.digit.f{background:#FAF7F2;color:#0A1F1A}
+.digit.c{border:2px solid #FF9D6E;background:rgba(255,255,255,.1)}
+.text-input{background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.15);border-radius:14px;padding:14px 16px;color:#FAF7F2;font-size:14px}
+.text-input.focus{border-color:#BFFF4F}
+</style></head><body>
+  <div>
+    <label>YOUR NIN</label>
+    <div class="input-dark">
+      <div class="digits">
+        <div class="digit f">•</div><div class="digit f">•</div><div class="digit f">•</div><div class="digit f">•</div><div class="digit f">•</div>
+        <div class="digit c"></div><div class="digit"></div><div class="digit"></div><div class="digit"></div><div class="digit"></div><div class="digit"></div>
+      </div>
+    </div>
+  </div>
+  <div class="text-input">+234 •••  •••  ••••</div>
+  <div class="text-input focus">ade.adedo@gmail.com</div>
+</body></html>

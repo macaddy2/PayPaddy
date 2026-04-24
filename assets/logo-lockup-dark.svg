@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" width="320" height="80">
+  <rect x="6" y="12" width="56" height="56" rx="16" fill="#BFFF4F" transform="rotate(-8 34 40)"></rect>
+  <g transform="rotate(-8 34 40) translate(34 42)">
+    <path d="M -10 -2 v-4 a 10 10 0 0 1 20 0 v 4" fill="none" stroke="#0A1F1A" stroke-width="4" stroke-linecap="round"></path>
+    <rect x="-13" y="-2" width="26" height="18" rx="3" fill="#0A1F1A"></rect>
+    <circle cx="0" cy="6" r="2" fill="#BFFF4F"></circle>
+    <rect x="-1" y="6" width="2" height="5" rx="0.5" fill="#BFFF4F"></rect>
+  </g>
+  <text x="80" y="52" font-family="Manrope, sans-serif" font-weight="900" font-size="34" letter-spacing="-1.2" fill="#FAF7F2">PayPaddy</text>
+</svg>

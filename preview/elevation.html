@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><style>
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Manrope',sans-serif}
+body{width:700px;background:#FAF7F2;padding:24px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px;align-items:start}
+.cell{background:#FFF;border-radius:14px;padding:20px;text-align:center}
+.box{width:100%;height:64px;background:#FAF7F2;border-radius:10px;margin:12px 0}
+.sm{box-shadow:0 2px 6px rgba(10,31,26,.06)}
+.md{box-shadow:0 8px 24px rgba(10,31,26,.12)}
+.cta{box-shadow:0 8px 24px rgba(10,31,26,.30);background:#BFFF4F}
+.lift{box-shadow:0 20px 60px rgba(0,0,0,.45);background:#0A1F1A}
+.lbl{font-size:11px;font-weight:800;color:#0A1F1A}
+.c{font-size:10px;color:#8B8680;margin-top:2px;font-family:'JetBrains Mono',monospace}
+</style></head><body>
+  <div class="cell"><div class="box sm"></div><div class="lbl">sm</div><div class="c">0 2 6 .06</div></div>
+  <div class="cell"><div class="box md"></div><div class="lbl">default</div><div class="c">0 8 24 .12</div></div>
+  <div class="cell"><div class="box cta"></div><div class="lbl">cta (lime)</div><div class="c">0 8 24 .30</div></div>
+  <div class="cell"><div class="box lift"></div><div class="lbl">lift</div><div class="c">0 20 60 .45</div></div>
+</body></html>

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" role="img" aria-label="PayPaddy mark">
+  <rect x="8" y="8" width="104" height="104" rx="28" fill="#BFFF4F" transform="rotate(-8 60 60)"></rect>
+  <g transform="rotate(-8 60 60) translate(60 62)">
+    <path d="M -18 -4 v-8 a 18 18 0 0 1 36 0 v 8" fill="none" stroke="#0A1F1A" stroke-width="7" stroke-linecap="round"></path>
+    <rect x="-24" y="-4" width="48" height="34" rx="6" fill="#0A1F1A"></rect>
+    <circle cx="0" cy="12" r="4" fill="#BFFF4F"></circle>
+    <rect x="-2" y="12" width="4" height="10" rx="1" fill="#BFFF4F"></rect>
+  </g>
+</svg>

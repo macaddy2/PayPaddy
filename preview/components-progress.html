@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><style>
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Manrope',sans-serif}
+body{width:700px;background:#0A1F1A;padding:24px;color:#FAF7F2}
+.wrap{background:#0A1F1A;padding:4px}
+.bars{display:flex;gap:6px;margin-bottom:12px}
+.bar{flex:1}
+.fill{height:4px;border-radius:2px;margin-bottom:6px}
+.lbl{font-size:10px;font-weight:700;letter-spacing:.5px}
+.done .fill{background:#BFFF4F}
+.done .lbl{color:#BFFF4F}
+.active .fill{background:#FF9D6E}
+.active .lbl{color:#FF9D6E}
+.pend .fill{background:rgba(255,255,255,.15)}
+.pend .lbl{color:#8B8680}
+
+.milestones{display:flex;align-items:center;gap:4px;margin-top:20px}
+.dot{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:800}
+.dot.d{background:#BFFF4F;color:#0A1F1A}
+.dot.a{background:#FF9D6E;color:#0A1F1A}
+.dot.p{background:rgba(255,255,255,.15);color:#8B8680}
+.line{flex:1;height:3px}
+.line.d{background:#BFFF4F}
+.line.p{background:rgba(255,255,255,.15)}
+.labels{display:flex;justify-content:space-between;margin-top:6px;font-size:10px;font-weight:700}
+</style></head><body>
+  <div class="bars">
+    <div class="bar done"><div class="fill"></div><div class="lbl">BVN</div></div>
+    <div class="bar active"><div class="fill"></div><div class="lbl">NIN</div></div>
+    <div class="bar pend"><div class="fill"></div><div class="lbl">FACE</div></div>
+  </div>
+
+  <div class="milestones">
+    <div class="dot d">✓</div><div class="line d"></div>
+    <div class="dot d">✓</div><div class="line d"></div>
+    <div class="dot a">3</div><div class="line p"></div>
+    <div class="dot p">4</div>
+  </div>
+  <div class="labels">
+    <span style="color:#BFFF4F">Created</span>
+    <span style="color:#BFFF4F">Funded</span>
+    <span style="color:#FF9D6E">Delivery</span>
+    <span style="color:#8B8680">Done</span>
+  </div>
+</body></html>

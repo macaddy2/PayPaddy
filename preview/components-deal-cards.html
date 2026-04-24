@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><style>
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Manrope',sans-serif}
+body{width:700px;background:#FAF7F2;padding:24px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.card{background:#FFF;border:1.5px solid #F0EBE1;border-radius:14px;padding:14px;position:relative;overflow:hidden}
+.card.urgent::before{content:"";position:absolute;top:0;left:0;width:4px;height:100%;background:#FF6B4A}
+.row{display:flex;gap:12px;align-items:center}
+.icon{width:44px;height:44px;border-radius:12px;background:#F0EBE1;display:grid;place-items:center;font-size:20px;flex-shrink:0}
+.info{flex:1;min-width:0}
+.title{font-size:14px;font-weight:800;color:#0A1F1A;margin-bottom:2px}
+.meta{font-size:11px;color:#8B8680;margin-bottom:8px}
+.foot{display:flex;justify-content:space-between;align-items:center}
+.amt{font-size:15px;font-weight:900;color:#0A1F1A;font-variant-numeric:tabular-nums}
+.badge{padding:4px 10px;border-radius:8px;font-size:10px;font-weight:700}
+.warn{color:#FF6B4A;font-size:10px;font-weight:700;margin-top:6px}
+</style></head><body>
+  <div class="card urgent">
+    <div class="row">
+      <div class="icon">🛍</div>
+      <div class="info">
+        <div class="title">MacBook Pro Purchase</div>
+        <div class="meta">with TechHub CV</div>
+        <div class="foot"><span class="amt">₦1,250,000</span><span class="badge" style="background:rgba(245,166,35,.2);color:#F5A623">Shipping</span></div>
+        <div class="warn">⏱ 2 days left</div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="row">
+      <div class="icon">⚽</div>
+      <div class="info">
+        <div class="title">Arsenal vs Chelsea</div>
+        <div class="meta">with @ChuksD</div>
+        <div class="foot"><span class="amt">₦50,000</span><span class="badge" style="background:rgba(61,127,255,.2);color:#3D7FFF">Match in 4h</span></div>
+      </div>
+    </div>
+  </div>
+</body></html>

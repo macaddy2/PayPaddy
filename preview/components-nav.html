@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><style>
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Manrope',sans-serif}
+body{width:700px;background:#FAF7F2;padding:24px}
+.nav{background:#FAF7F2;border-top:1px solid #F0EBE1;display:flex;justify-content:space-around;align-items:center;padding:12px 20px 20px;max-width:360px;margin:0 auto;border-radius:0 0 16px 16px;box-shadow:0 -4px 20px rgba(10,31,26,.05)}
+.item{text-align:center;position:relative;cursor:pointer}
+.ic{font-size:22px;margin-bottom:2px;color:#8B8680}
+.lb{font-size:10px;font-weight:600;color:#8B8680}
+.active .ic,.active .lb{color:#00A86B;font-weight:800}
+.badge{position:absolute;top:-4px;right:10px;background:#FF6B4A;color:#fff;border-radius:10px;padding:2px 6px;font-size:9px;font-weight:800}
+.tabs{display:flex;gap:6px;margin-bottom:24px;justify-content:center}
+.tab{padding:7px 14px;border:1px solid rgba(0,168,107,.25);border-radius:999px;background:transparent;color:#0A1F1A;font-size:12px;font-weight:600}
+.tab.active{background:#00A86B;color:#fff;border-color:#00A86B}
+</style></head><body>
+  <div class="tabs">
+    <div class="tab active">All</div>
+    <div class="tab">Active</div>
+    <div class="tab">Pending</div>
+    <div class="tab">Done</div>
+    <div class="tab">Disputes</div>
+  </div>
+  <div class="nav">
+    <div class="item active"><div class="ic">⌂</div><div class="lb">Home</div></div>
+    <div class="item"><div class="ic">📋</div><div class="lb">Deals</div></div>
+    <div class="item"><div class="ic">💬</div><div class="lb">Chat</div><div class="badge">3</div></div>
+    <div class="item"><div class="ic">◉</div><div class="lb">Me</div></div>
+  </div>
+</body></html>

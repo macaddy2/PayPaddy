@@ -1,0 +1,362 @@
+PAYPADDY
+Product Requirements Document (PRD)
+The Lagos Standard — Hardened Trust Protocol
+Version 1.0 | March 2026 | Prepared by Ade
+ade.adedo@gmail.com
+Confidential — do not distribute without permission.
+1. Product Overview
+PayPaddy's The Lagos Standard is a collateralized escrow marketplace — Nigeria's first &quot;Hardened Trust Protocol.&quot; The platform enables buyers to pay securely via CBN-licensed bank escrow, while sellers stake real collateral as a trust signal. Trinity Verification (BVN + NIN + Liveness) ensures every participant is identity-verified.
+The current state: wireframes complete, no live product. This PRD specifies the full MVP.
+1.1 Vision Statement
+Eliminate the trust tax in Nigerian e-commerce — making online transactions safer than in-person ones.
+1.2 Success Metrics
+Metric
+Target (6 Months)
+Measurement
+Verified merchants onboarded
+50
+Platform records
+Escrow transactions processed
+500
+Transaction logs
+Gross Merchandise Value (GMV)
+₦250M
+Payment records
+Dispute rate
+&lt;2%
+Dispute/transaction ratio
+Trinity Verification completion rate
+&gt;70%
+Funnel analytics
+Buyer repeat purchase rate
+&gt;40%
+Cohort analysis
+Platform revenue (fees collected)
+₦8.75M
+Finance records
+2. User Personas
+2.1 Primary: The Cautious Buyer
+Profile: Urban professional aged 25-40, Lagos. Tech-savvy, has been scammed before (or knows someone who has). Currently drives to Computer Village for high-value purchases despite time cost.
+Goals: Buy electronics safely online. Save time and avoid in-person risk.
+Pain Points: No accountability for sellers. No refunds. Fake reviews. Payment reversals.
+Trigger Moment: Needs a laptop/phone costing ₦200K+. Dreads the Computer Village trip.
+2.2 Secondary: The Established Merchant
+Profile: Electronics trader, 10-15 years in business, Computer Village, Ikeja. Strong offline reputation. Wants to expand online but lacks trust signals.
+Goals: Grow online sales channel. Protect hard-earned reputation. Get paid reliably.
+Pain Points: Chargebacks. No way to prove legitimacy online. Complex e-commerce platforms.
+Trigger Moment: Loses a sale because the buyer does not trust online ordering.
+2.3 Tertiary: The Emerging Seller
+Profile: Part-time electronics reseller, 22-30, sells on WhatsApp/Instagram. Building a business.
+Goals: Build reputation from scratch. Attract buyers who do not know them.
+Pain Points: Zero trust signals. Frequent scam accusations. Payment delays.
+3. Current State Assessment
+Element
+Current Market State
+Gap
+Identity Verification
+Basic email/phone on Jumia/Konga
+No financial identity (BVN) or government ID (NIN) verification
+Seller Accountability
+Star ratings only, easily gamed
+No economic stake; no consequences for fraud
+Payment Protection
+Platform-held funds (partial) on Jumia
+No regulated escrow; no insurance fund
+Dispute Resolution
+Email-based, 2-4 week resolution
+No structured arbitration; no collateral slashing
+Trust Signals
+Follower counts, star ratings
+No multi-dimensional trust score (verification + collateral + history)
+Payment Methods
+Card, bank transfer on some platforms
+Limited USSD support for low-connectivity users
+Buyer Protection
+Return policies vary wildly
+No SafeGuard Pool or network-wide insurance
+4. Solution: The Three Pillars
+Pillar 1 — Trinity Verification
+BVN (financial identity via NIBSS) + NIN (government ID via NIMC) + Liveness/SIM age check. Everyone verifies. No shortcuts.
+Pillar 2 — Collateral Staking
+Sellers stake ₦100K+ (Silver) or ₦500K+ (Gold). Fraud = collateral slashed. Economic skin-in-the-game.
+Pillar 3 — Escrow + SafeGuard
+Payments held in CBN-licensed bank escrow. 2% of all fees → SafeGuard Pool (network insurance).
+5. User Stories &amp; Requirements
+Epic 1: Registration &amp; Onboarding
+ID
+User Story
+Acceptance Criteria
+Priority
+TLS-001
+As a user, I want to sign up with my phone number so I can create my account quickly
+OTP auth via Termii. Profile created in &lt;30s.
+P0
+TLS-002
+As a user, I want to select my role (buyer/seller) during onboarding
+Role selection screen. Can change later in settings.
+P0
+TLS-003
+As a user, I want to see a walkthrough of how the platform works
+3-screen carousel: Trinity Verification, Escrow, SafeGuard.
+P0
+Epic 2: Trinity Verification
+ID
+User Story
+Acceptance Criteria
+Priority
+TLS-010
+As a user, I want to verify my BVN
+BVN submitted → verified against NIBSS in &lt;5s. Status persists.
+P0
+TLS-011
+As a user, I want to verify my NIN
+NIN submitted → verified against NIMC in &lt;10s.
+P0
+TLS-012
+As a user, I want to complete a liveness check
+Camera-based liveness + SIM age verification. &lt;8s response.
+P0
+TLS-013
+As a user, I want to see my verification progress clearly
+3-step progress bar. Status for each step (pending/verified).
+P0
+Epic 3: Marketplace &amp; Discovery
+ID
+User Story
+Acceptance Criteria
+Priority
+TLS-020
+As a buyer, I want to browse verified merchants by category
+Categories: Laptops, Phones, Monitors, Parts. Sorted by trust score.
+P0
+TLS-021
+As a buyer, I want to search for products
+Text search. Results show product + seller trust metrics.
+P0
+TLS-022
+As a buyer, I want to see seller trust metrics on every listing
+Trust card: collateral amount, disputes, tenure, Gold/Silver badge.
+P0
+TLS-023
+As a buyer, I want to filter by Gold/Silver badge
+Badge filter on merchant listing page.
+P1
+Epic 4: Escrow Payment
+ID
+User Story
+Acceptance Criteria
+Priority
+TLS-030
+As a buyer, I want to pay via bank transfer with funds held in escrow
+Escrow created → funds locked → seller notified. Visual: Buyer → Bank → Seller.
+P0
+TLS-031
+As a buyer, I want to see fee breakdown before confirming
+Order summary: item + escrow fee (1.5%) + SafeGuard (2%) = total.
+P0
+TLS-032
+As a buyer, I want to pay via USSD
+USSD code generated (*999*1*CODE#). Payment confirmed via callback.
+P1
+Epic 5: Order &amp; Delivery
+ID
+User Story
+Acceptance Criteria
+Priority
+TLS-040
+As a buyer, I want to track my order
+Timeline: Placed → Seller Notified → In Transit → Delivered.
+P0
+TLS-041
+As a buyer, I want to confirm receipt to release funds
+&quot;Confirm Receipt&quot; button post-delivery. Triggers fund release within 24hrs.
+P0
+TLS-042
+As a buyer, I want to open a dispute
+&quot;Open Dispute&quot; → 3-step form: reason → evidence → submit. Triggers arbitration.
+P0
+Epic 6: Collateral &amp; Merchant Dashboard
+ID
+User Story
+Acceptance Criteria
+Priority
+TLS-050
+As a seller, I want to stake collateral for a trust badge
+Min ₦100K (Silver), ₦500K+ (Gold). Staking flow with payment confirmation.
+P0
+TLS-051
+As a seller, I want a dashboard with sales, collateral, and orders
+Monthly sales volume. Collateral utilization bar. Pending orders list.
+P0
+TLS-052
+As a seller, I want to list products
+Form: title, description, price, category, up to 5 images.
+P0
+TLS-053
+As a seller, I want prompt fund release after buyer confirmation
+Auto-release within 24hrs of buyer confirm. Notification sent.
+P0
+Epic 7: Dispute Resolution
+ID
+User Story
+Acceptance Criteria
+Priority
+TLS-060
+As a buyer, I want to submit a dispute with evidence
+3-step: select reason, upload photos/description, submit.
+P0
+TLS-061
+As a seller, I want to respond to disputes
+Notification. Response form with evidence upload. 48hr window.
+P0
+TLS-062
+As an admin, I want to arbitrate disputes
+Admin panel: evidence from both sides. Rule buyer/seller. Trigger fund release or collateral slash.
+P0
+6. Information Architecture &amp; Navigation
+Screen
+Key Elements
+Phase
+Splash / Onboarding
+Trinity, Collateral, SafeGuard value props. CTA.
+Phase 1
+Sign Up / Login
+Phone + OTP auth
+Phase 1
+Trinity Verification
+3-step guided flow with progress bar
+Phase 1
+Buyer Home
+Trust score, categories, verified merchant listings, search
+Phase 1
+Product Detail
+Product info, seller trust card, SafeGuard badge, escrow CTA
+Phase 1
+Escrow Payment
+Flow visualization, order summary, payment methods
+Phase 1
+Order Tracking
+Timeline, confirm receipt / open dispute
+Phase 1
+Merchant Dashboard
+Sales stats, collateral health, pending orders, add listing
+Phase 1
+Dispute Submission
+3-step flow
+Phase 1
+Admin Arbitration
+Evidence comparison, ruling actions
+Phase 1
+Ratings &amp; Reviews
+Post-transaction rating
+Phase 2
+Trust Score Detail
+Score breakdown, improvement tips
+Phase 2
+7. Non-Goals (MVP)
+International payments (future: diaspora market)
+Categories beyond electronics (future: fashion via Fashup, home goods)
+In-app messaging (MVP: WhatsApp redirect)
+Seller financing/credit
+Delivery logistics (seller-managed for MVP)
+Automated dispute resolution (manual arbitration for MVP)
+AI fraud detection
+8. Dependencies
+Dependency
+Provider Options
+Status
+Risk
+BVN Verification
+Smile Identity, Dojah, Prembly
+Evaluating
+Medium
+NIN Verification
+NIMC via aggregator (Dojah)
+Evaluating
+High
+Liveness Detection
+Smile Identity, iProov
+Evaluating
+Low
+Payment Gateway
+Paystack, Flutterwave
+Preferred: Paystack
+Low
+Escrow Banking
+GTBank, Providus, Sterling
+In discussions
+High
+SMS/OTP
+Termii
+Available
+Low
+Cloud Infrastructure
+AWS (Cape Town + Lagos edge)
+Available
+Low
+Delivery Integration
+TBD (Phase 2)
+TBD
+Medium
+9. Open Questions
+#
+Question
+Owner
+Priority
+Status
+1
+CBN licensing requirements for escrow?
+Legal
+Critical
+Open
+2
+BVN/NIN API SLAs and uptime?
+Engineering
+High
+Investigating
+3
+Dispute arbitration: automated, manual, hybrid?
+Product
+High
+Open
+4
+Minimum collateral for Silver/Gold?
+Product + Data
+Medium
+Open
+5
+Trust Score algorithm weighting?
+Data
+Medium
+Open
+6
+SafeGuard Pool legal structure?
+Legal + Finance
+High
+Open
+7
+WhatsApp Business API path?
+Engineering
+Medium
+Researching
+10. Phasing &amp; Roadmap
+Phase 1 — MVP (Months 1-3): Core verification, escrow, collateral, merchant dashboard, buyer flow, disputes
+Phase 2 — Engagement (Months 4-5): Ratings, USSD, push notifications, WhatsApp
+Phase 3 — Expansion (Months 6-8): Categories, delivery logistics, Abuja launch
+Phase 4 — Ecosystem (Months 9+): Fashup integration, seller financing, diaspora, other African markets
+11. Future Roadmap: Version 2.0+
+The following features represent strategic extensions beyond the initial four-phase roadmap. They are informed by the Trust Protocol research and competitive analysis, and are designed to deepen PayPaddy’s moat as Africa’s trust infrastructure layer for e-commerce.
+Phase 5A — Web of Trust / Vouching System
+New users cannot transact until a high-reputation user vouches for them. If the vouched user commits fraud, the voucher loses reputation or staked capital. This creates a social trust layer where existing trusted users have skin-in-the-game when onboarding newcomers — think of it as a referral system where your reputation is the collateral.
+Phase 5B — Decentralized Arbitration (Juror Model)
+Randomly select 3–5 high-reputation users as blind-voting jurors for disputes. Jurors who vote with the majority earn rewards; those who vote incoherently lose reputation. This is far more scalable than platform-mediated disputes and distributes the cost of conflict resolution across the community.
+Phase 5C — Offline Cash Agent Network
+Recruit local convenience stores as “Human ATMs” who stake capital to process cash withdrawals. This bridges PayPaddy’s digital escrow system to the physical cash economy — critical in a market where a large portion of transactions still involve cash.
+Phase 5D — Micro-Hedging Against Naira Volatility
+Hold user balances in USD-pegged stablecoins and convert to naira only at the point of withdrawal. This protects users from inflation and currency devaluation during the escrow holding period — a significant trust differentiator in a high-inflation environment.
+Phase 6 — Trust-as-a-Service API (“Visa of Trust”)
+Open the escrow and trust verification system as a public API so other marketplaces, logistics platforms, and fintech companies can plug into PayPaddy’s trust infrastructure. This transforms PayPaddy from a marketplace into a platform — the “Visa of Trust” for African digital commerce.
+Recommended Licensing &amp; Integration Partners
+Escrow Banking: Providus Bank, Wema Bank, Sterling Bank. Biometric Verification: Smile ID (liveness detection). KYC Providers: Prembly &amp; Youverify. NIN Verification: NIMC NINAuth. Payment Processing: Paystack. Note: PSSP license requires ₦250M capital base + ₦100M security deposit with CBN.
+Competitive Positioning &amp; Moat Strategy
+PayPaddy is the only platform combining biometric verification + seller collateral + escrow + SafeGuard pool. Key competitors include Jumia and Konga (general e-commerce), Vesicash and AtaraPay (escrow specialists), and Paystack/Flutterwave (payment infrastructure). Six defensive moats protect this position: (1) Innovator’s Dilemma Shield — incumbents won’t copy collateral staking as it alienates their existing sellers; (2) Trust Data Moat — verified transaction histories cannot be exported; (3) SafeGuard Pool actuarial advantage — requires data that only accumulates over time; (4) Network effects from Web of Trust vouching; (5) Regulatory moat from being first with CBN-compliant escrow; (6) Brand trust as “the safe option” for Nigerian e-commerce.
