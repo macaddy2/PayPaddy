@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PayPaddy — Interactive Prototype</title>
+<style>
+/* ============================================================
+   FONTS
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap');
+
+/* ============================================================
+   DESIGN TOKENS (from colors_and_type.css)
+   ============================================================ */
+:root {
+  /* brand */
+  --pp-ink:        #0A1F1A;
+  --pp-forest:     #14453D;
+  --pp-emerald:    #00A86B;
+  --pp-lime:       #BFFF4F;
+  --pp-apricot:    #FF9D6E;
+  --pp-coral:      #FF6B4A;
+  --pp-cream:      #FAF7F2;
+  --pp-sand:       #F0EBE1;
+  --pp-stone:      #8B8680;
+  --pp-charcoal:   #1C1C1C;
+  --pp-caution:    #F5A623;
+  --pp-alert:      #E94B3C;
+  --pp-info:       #3D7FFF;
+
+  /* radii */
+  --pp-radius-xs:   4px;
+  --pp-radius-sm:   8px;
+  --pp-radius:      14px;
+  --pp-radius-lg:   20px;
+  --pp-radius-xl:   24px;
+  --pp-radius-pill: 999px;
+
+  /* shadows */
+  --pp-shadow-sm:   0 2px 6px rgba(10,31,26,.06);
+  --pp-shadow:      0 8px 24px rgba(10,31,26,.12);
+  --pp-shadow-cta:  0 8px 24px rgba(10,31,26,.30);
+  --pp-shadow-lift: 0 20px 60px rgba(0,0,0,.45);
+
+  /* fonts */
+  --pp-font-sans: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --pp-font-mono: 'JetBrains Mono', 'Courier New', monospace;
+
+  /* ---- THEME: v2 Warm Trust (default) ---- */
+  --t-hero-bg:      #14453D;
+  --t-primary:      #00A86B;
+  --t-primary-fg:   #fff;
+  --t-accent:       #FF9D6E;
+  --t-highlight:    #BFFF4F;
+  --t-vault-grad:   linear-gradient(135deg, #0A1F1A 0%, #14453D 100%);
+  --t-header-grad:  linear-gradient(135deg, #14453D 0%, #0d5c4f 100%);
+
+  /* Uncomment block below to switch to v1 Electric:
+  --t-hero-bg:      #0A1F1A;
+  --t-primary:      #BFFF4F;
+  --t-primary-fg:   #0A1F1A;
+  --t-accent:       #FF9D6E;
+  --t-highlight:    #BFFF4F;
+  --t-vault-grad:   linear-gradient(135deg, #14453D 0%, #00A86B 100%);
+  --t-header-grad:  linear-gradient(135deg, #0A1F1A, #14453D);
+  */
+}
+
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: var(--pp-font-sans);
+  background: linear-gradient(160deg, #0A1F1A 0%, #14453D 100%);
+  min-height: 100vh;
+  color: var(--pp-cream);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 16px 64px;
+}
+button { font-family: inherit; cursor: pointer; }
+textarea { font-family: inherit; }
+
+/* ============================================================
+   PAGE HEADER
+   ============================================================ */
+.page-hdr {
+  text-align: center;
+  margin-bottom: 24px;
+  max-width: 720px;
+  width: 100%;
+}
+.page-hdr__logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.page-hdr__logo svg { width: 36px; height: 36px; }
+.page-hdr__wordmark {
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: -0.6px;
+  color: var(--pp-cream);
+}
+.page-hdr__wordmark span { color: var(--pp-lime); }
+.page-hdr h1 { font-size: 13px; color: var(--pp-stone); font-weight: 500; margin-top: 2px; }
+
+/* ============================================================
+   TAB NAV
+   ============================================================ */
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  max-width: 720px;
+  width: 100%;
+  margin-bottom: 24px;
+}
+.tab {
+  padding: 7px 14px;
+  border: 1px solid rgba(191,255,79,.25);
+  border-radius: var(--pp-radius-pill);
+  background: transparent;
+  color: var(--pp-cream);
+  font-size: 12px;
+  font-weight: 700;
+  transition: border-color .2s, color .2s, background .2s;
+}
+.tab:hover { border-color: var(--pp-lime); color: var(--pp-lime); }
+.tab.active { background: var(--pp-lime); color: var(--pp-ink); border-color: var(--pp-lime); }
+
+/* ============================================================
+   PHONE FRAME
+   ============================================================ */
+.phone {
+  width: 300px;
+  height: 640px;
+  border-radius: 44px;
+  background: #1C1C1C;
+  padding: 12px;
+  box-shadow: 0 0 0 3px #333, var(--pp-shadow-lift);
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.notch {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90px;
+  height: 22px;
+  background: #000;
+  border-radius: 0 0 14px 14px;
+  z-index: 90;
+}
+.screen-wrap {
+  width: 100%;
+  height: 100%;
+  border-radius: 34px;
+  overflow: hidden;
+  position: relative;
+  background: var(--pp-cream);
+}
+
+/* ============================================================
+   SCREEN CONTAINERS
+   ============================================================ */
+.screen {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .35s ease;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  color: var(--pp-charcoal);
+  font-family: var(--pp-font-sans);
+}
+.screen::-webkit-scrollbar { display: none; }
+.screen.active { opacity: 1; pointer-events: auto; }
+
+/* ============================================================
+   KEYBOARD HINT FOOTER
+   ============================================================ */
+.hint {
+  margin-top: 18px;
+  font-size: 11px;
+  color: var(--pp-stone);
+  text-align: center;
+}
+.hint kbd {
+  display: inline-block;
+  padding: 2px 7px;
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 4px;
+  font-size: 11px;
+  margin: 0 2px;
+}
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+@keyframes urgentPulse {
+  0%, 100% { box-shadow: -3px 0 0 var(--pp-coral); }
+  50%       { box-shadow: -3px 0 0 var(--pp-coral), -6px 0 12px rgba(255,107,74,.3); }
+}
+@keyframes progressFill {
+  from { width: 0; }
+}
+@keyframes timerTick {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: .6; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     PAGE HEADER
+     ============================================================ -->
+<header class="page-hdr">
+  <div class="page-hdr__logo">
+    <!-- Inline logo-mark.svg -->
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="PayPaddy mark">
+      <rect x="8" y="8" width="104" height="104" rx="28" fill="#BFFF4F" transform="rotate(-8 60 60)"/>
+      <g transform="rotate(-8 60 60) translate(60 62)">
+        <path d="M -18 -4 v-8 a 18 18 0 0 1 36 0 v 8" fill="none" stroke="#0A1F1A" stroke-width="7" stroke-linecap="round"/>
+        <rect x="-24" y="-4" width="48" height="34" rx="6" fill="#0A1F1A"/>
+        <circle cx="0" cy="12" r="4" fill="#BFFF4F"/>
+        <rect x="-2" y="12" width="4" height="10" rx="1" fill="#BFFF4F"/>
+      </g>
+    </svg>
+    <span class="page-hdr__wordmark">Pay<span>Paddy</span></span>
+  </div>
+  <h1>Interactive prototype · click tabs or use arrow keys</h1>
+</header>
+
+<!-- TAB NAV (populated by JS) -->
+<nav class="tabs" id="tabs"></nav>
+
+<!-- PHONE FRAME -->
+<div class="phone">
+  <div class="notch"></div>
+  <div class="screen-wrap" id="wrap">
+    <!-- screens injected here -->
+  </div>
+</div>
+
+<!-- KEYBOARD HINT -->
+<p class="hint"><kbd>←</kbd> <kbd>→</kbd> navigate screens</p>
+
+<script>
+// ============================================================
+// SCREEN REGISTRY
+// ============================================================
+const SCREENS = [
+  { key: 'splash',     label: 'Splash' },
+  { key: 'onboarding',label: 'Onboarding' },
+  { key: 'home',       label: 'Home' },
+  { key: 'create',     label: 'Create Deal' },
+  { key: 'room',       label: 'Deal Room' },
+  { key: 'trinity',    label: 'Trinity' },
+  { key: 'dispute',    label: 'Dispute' },
+  { key: 'ussd',       label: 'USSD Offline' },
+  { key: 'agents',     label: 'Agents' },
+  { key: 'merchant',   label: 'Merchant' },
+];
+
+// ============================================================
+// NAVIGATION STATE
+// ============================================================
+let currentScreen = parseInt(localStorage.getItem('pp-screen') || '0', 10);
+
+function setScreen(i) {
+  currentScreen = Math.max(0, Math.min(SCREENS.length - 1, i));
+  localStorage.setItem('pp-screen', String(currentScreen));
+  renderNav();
+  renderScreens();
+  onScreenChange(SCREENS[currentScreen].key);
+}
+
+function renderNav() {
+  const tabsEl = document.getElementById('tabs');
+  tabsEl.innerHTML = '';
+  SCREENS.forEach((s, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'tab' + (i === currentScreen ? ' active' : '');
+    btn.textContent = s.label;
+    btn.onclick = () => setScreen(i);
+    tabsEl.appendChild(btn);
+  });
+}
+
+function renderScreens() {
+  document.querySelectorAll('.screen').forEach((el, i) => {
+    el.classList.toggle('active', i === currentScreen);
+  });
+}
+
+// Arrow-key navigation
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight') setScreen(currentScreen + 1);
+  if (e.key === 'ArrowLeft')  setScreen(currentScreen - 1);
+});
+
+// ============================================================
+// SCREEN-SPECIFIC STATE HOOKS (called on each screen change)
+// ============================================================
+let ussdTimer = null;
+
+function onScreenChange(key) {
+  // USSD countdown
+  clearInterval(ussdTimer);
+  if (key === 'ussd') startUssdTimer();
+}
+
+// ============================================================
+// ONBOARDING CAROUSEL STATE
+// ============================================================
+let onboardStep = 0;
+const ONBOARD_SLIDES = [
+  { icon: '🔒', title: 'Lock your money',       body: 'Funds sit with a CBN-licensed bank until both sides agree.' },
+  { icon: '🤝', title: 'Any deal, any paddy',   body: 'Goods, services, contracts, wagers — one trust layer for all.' },
+  { icon: '🛡️', title: 'Real humans resolve',   body: 'If things go sideways, a human mediator steps in within 24h.' },
+];
+
+function setOnboardStep(step) {
+  onboardStep = step;
+  renderOnboarding();
+}
+
+function renderOnboarding() {
+  const s = ONBOARD_SLIDES[onboardStep];
+  const icon  = document.getElementById('ob-icon');
+  const title = document.getElementById('ob-title');
+  const body  = document.getElementById('ob-body');
+  const btn   = document.getElementById('ob-btn');
+  if (!icon) return;
+  icon.textContent  = s.icon;
+  title.textContent = s.title;
+  body.textContent  = s.body;
+  btn.textContent   = onboardStep < 2 ? 'Next' : 'Get started';
+  // dots
+  document.querySelectorAll('.ob-dot').forEach((d, i) => {
+    d.style.width      = i === onboardStep ? '20px' : '6px';
+    d.style.background = i === onboardStep ? 'var(--t-highlight)' : 'rgba(255,255,255,.2)';
+  });
+}
+
+function onboardNext() {
+  if (onboardStep < 2) setOnboardStep(onboardStep + 1);
+  else setScreen(2); // → Home
+}
+
+// ============================================================
+// DISPUTE SELECTION STATE
+// ============================================================
+let disputeSel = null;
+
+function selectIssue(i) {
+  disputeSel = disputeSel === i ? null : i;
+  renderDispute();
+}
+
+function renderDispute() {
+  document.querySelectorAll('.dispute-issue').forEach((el, i) => {
+    const active = disputeSel === i;
+    el.style.background = active ? 'var(--pp-ink)'  : '#fff';
+    el.style.color      = active ? 'var(--pp-cream)': 'var(--pp-charcoal)';
+    el.style.borderColor= active ? 'var(--pp-ink)'  : 'var(--pp-sand)';
+    const radio = el.querySelector('.issue-radio');
+    if (radio) {
+      radio.style.background  = active ? 'var(--pp-lime)' : 'transparent';
+      radio.style.borderColor = active ? 'var(--pp-lime)' : 'var(--pp-sand)';
+      radio.textContent       = active ? '✓' : '';
+      radio.style.color       = 'var(--pp-ink)';
+    }
+    const hint = el.querySelector('.issue-hint');
+    if (hint) hint.style.color = active ? 'rgba(250,247,242,.6)' : 'var(--pp-stone)';
+  });
+  const extra  = document.getElementById('dispute-extra');
+  const cta    = document.getElementById('dispute-cta');
+  if (extra) extra.style.display = disputeSel !== null ? 'block' : 'none';
+  if (cta) {
+    cta.disabled         = disputeSel === null;
+    cta.style.background = disputeSel !== null ? 'var(--pp-ink)'  : 'var(--pp-sand)';
+    cta.style.color      = disputeSel !== null ? 'var(--pp-cream)': 'var(--pp-stone)';
+    cta.style.cursor     = disputeSel !== null ? 'pointer' : 'not-allowed';
+    cta.innerHTML        = disputeSel !== null
+      ? 'Open Dispute <span style="color:var(--pp-lime)">→</span>'
+      : 'Select an issue to continue';
+  }
+}
+
+// ============================================================
+// USSD COUNTDOWN TIMER
+// ============================================================
+let ussdSeconds = 292; // 4:52
+
+function startUssdTimer() {
+  renderUssdTimer();
+  ussdTimer = setInterval(() => {
+    if (ussdSeconds > 0) { ussdSeconds--; renderUssdTimer(); }
+    else clearInterval(ussdTimer);
+  }, 1000);
+}
+
+function renderUssdTimer() {
+  const el = document.getElementById('ussd-timer');
+  if (!el) return;
+  const m = String(Math.floor(ussdSeconds / 60)).padStart(2, '0');
+  const s = String(ussdSeconds % 60).padStart(2, '0');
+  el.textContent = m + ':' + s;
+}
+
+// ============================================================
+// BOOT
+// ============================================================
+window.addEventListener('DOMContentLoaded', () => {
+  renderNav();
+  renderScreens();
+  renderOnboarding();
+  renderDispute();
+  onScreenChange(SCREENS[currentScreen].key);
+});
+</script>
+</body>
+</html>
