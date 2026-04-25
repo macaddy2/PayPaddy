@@ -397,27 +397,30 @@ textarea { font-family: inherit; }
 /* ============================================================
    RESPONSIVENESS (Mobile View)
    ============================================================ */
-@media (max-width: 480px) {
+@media (max-width: 768px) {
   body {
-    padding: 0;
+    padding: 0 !important;
+    display: block !important; /* overrides flex/center */
   }
   .page-hdr, .tabs, .hint {
-    display: none; /* Hide presentation elements on small screens */
+    display: none !important;
   }
   .phone {
-    width: 100vw;
-    height: 100vh;
-    height: 100dvh; /* use dynamic viewport height if available */
-    border-radius: 0;
-    padding: 0;
-    box-shadow: none;
-    background: transparent;
+    width: 100% !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    max-width: 100% !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    margin: 0 !important;
   }
   .notch {
-    display: none; /* Hide the fake notch on real devices */
+    display: none !important;
   }
   .screen-wrap {
-    border-radius: 0;
+    border-radius: 0 !important;
   }
 }
 </style>
