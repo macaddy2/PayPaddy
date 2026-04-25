@@ -393,6 +393,33 @@ textarea { font-family: inherit; }
   0%, 100% { opacity: 1; }
   50%       { opacity: .6; }
 }
+
+/* ============================================================
+   RESPONSIVENESS (Mobile View)
+   ============================================================ */
+@media (max-width: 480px) {
+  body {
+    padding: 0;
+  }
+  .page-hdr, .tabs, .hint {
+    display: none; /* Hide presentation elements on small screens */
+  }
+  .phone {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh; /* use dynamic viewport height if available */
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+    background: transparent;
+  }
+  .notch {
+    display: none; /* Hide the fake notch on real devices */
+  }
+  .screen-wrap {
+    border-radius: 0;
+  }
+}
 </style>
 </head>
 <body>
