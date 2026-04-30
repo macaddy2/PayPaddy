@@ -380,6 +380,94 @@ textarea { font-family: inherit; }
 }
 
 /* ============================================================
+   DEMO NAVIGATOR DRAWER (hidden by default)
+   ============================================================ */
+.demo-toggle {
+  position: fixed;
+  bottom: 18px;
+  right: 18px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(191,255,79,.35);
+  color: var(--pp-lime);
+  font-size: 18px;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  z-index: 100;
+  backdrop-filter: blur(8px);
+  transition: filter .2s, transform .15s;
+}
+.demo-toggle:hover { filter: brightness(1.15); }
+.demo-toggle:active { transform: scale(.95); }
+.demo-drawer {
+  position: fixed;
+  top: 0;
+  right: -280px;
+  width: 260px;
+  height: 100vh;
+  background: rgba(10,31,26,.96);
+  backdrop-filter: blur(16px);
+  border-left: 1px solid rgba(191,255,79,.2);
+  padding: 28px 16px 16px;
+  overflow-y: auto;
+  transition: right .3s ease;
+  z-index: 99;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.demo-drawer::-webkit-scrollbar { display: none; }
+.demo-drawer.open { right: 0; }
+.demo-drawer__title {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  color: var(--pp-stone);
+  margin-bottom: 14px;
+}
+.demo-drawer__close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  font-size: 16px;
+  color: var(--pp-stone);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+.demo-drawer__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--pp-cream);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+  border: 1px solid transparent;
+}
+.demo-drawer__item:hover { background: rgba(255,255,255,.05); }
+.demo-drawer__item.active {
+  background: rgba(191,255,79,.12);
+  color: var(--pp-lime);
+  border-color: rgba(191,255,79,.3);
+}
+.demo-drawer__num {
+  font-family: var(--pp-font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--pp-stone);
+  width: 18px;
+}
+
+/* ============================================================
    ANIMATIONS
    ============================================================ */
 @keyframes urgentPulse {
@@ -446,9 +534,6 @@ textarea { font-family: inherit; }
   </div>
   <h1>Interactive prototype · click tabs or use arrow keys</h1>
 </header>
-
-<!-- TAB NAV (populated by JS) -->
-<nav class="tabs" id="tabs"></nav>
 
 <!-- PHONE FRAME -->
 <div class="phone">
@@ -531,11 +616,11 @@ textarea { font-family: inherit; }
             <div style="width:36px;height:36px;border-radius:50%;background:var(--pp-apricot);display:grid;place-items:center;font-size:13px;font-weight:800;color:var(--pp-ink);">AO</div>
             <div>
               <div style="font-size:14px;font-weight:700;">Welcome back, Ade 👋</div>
-              <!-- Trust Score chip — PRD enrichment -->
-              <span style="display:inline-flex;align-items:center;gap:4px;margin-top:4px;padding:3px 8px;background:rgba(191,255,79,.15);border:1px solid rgba(191,255,79,.25);border-radius:999px;font-size:9px;font-weight:800;color:var(--pp-lime);letter-spacing:.3px;">🛡 TRUST 850/900</span>
+              <!-- Trust Score chip — routes to Trust Detail -->
+              <span onclick="setScreen(14)" style="display:inline-flex;align-items:center;gap:4px;margin-top:4px;padding:3px 8px;background:rgba(191,255,79,.15);border:1px solid rgba(191,255,79,.25);border-radius:999px;font-size:9px;font-weight:800;color:var(--pp-lime);letter-spacing:.3px;cursor:pointer;">🛡 TRUST 850/900 →</span>
             </div>
           </div>
-          <div style="position:relative;font-size:18px;cursor:pointer;">🔔<span style="position:absolute;top:-2px;right:-2px;width:7px;height:7px;background:var(--pp-coral);border-radius:50%;"></span></div>
+          <div onclick="setScreen(15)" style="position:relative;font-size:18px;cursor:pointer;">🔔<span style="position:absolute;top:-2px;right:-2px;width:7px;height:7px;background:var(--pp-coral);border-radius:50%;"></span></div>
         </div>
         <!-- VAULT -->
         <div class="vault">
@@ -552,9 +637,9 @@ textarea { font-family: inherit; }
           Start a New Deal
         </button>
         <div style="display:flex;gap:6px;margin-bottom:16px;">
-          <div style="flex:1;padding:10px 6px;border-radius:8px;border:1px solid var(--pp-sand);text-align:center;font-size:11px;font-weight:700;background:#fff;cursor:pointer;">Join Deal</div>
-          <div style="flex:1;padding:10px 6px;border-radius:8px;border:1px solid var(--pp-sand);text-align:center;font-size:11px;font-weight:700;background:#fff;cursor:pointer;">Quick Pay</div>
-          <div style="flex:1;padding:10px 6px;border-radius:8px;border:1px solid var(--pp-sand);text-align:center;font-size:11px;font-weight:700;background:#fff;cursor:pointer;">My Paddys</div>
+          <div onclick="setScreen(10)" style="flex:1;padding:10px 6px;border-radius:8px;border:1px solid var(--pp-sand);text-align:center;font-size:11px;font-weight:700;background:#fff;cursor:pointer;">🛍 Browse</div>
+          <div onclick="setScreen(12)" style="flex:1;padding:10px 6px;border-radius:8px;border:1px solid var(--pp-sand);text-align:center;font-size:11px;font-weight:700;background:#fff;cursor:pointer;">📦 Track</div>
+          <div onclick="setScreen(7)" style="flex:1;padding:10px 6px;border-radius:8px;border:1px solid var(--pp-sand);text-align:center;font-size:11px;font-weight:700;background:#fff;cursor:pointer;">📱 USSD</div>
         </div>
         <p class="eyebrow" style="margin-bottom:8px;">Active Deals · 3</p>
         <!-- urgent deal — coral edge bar + pulse -->
@@ -586,9 +671,9 @@ textarea { font-family: inherit; }
       <!-- Bottom nav -->
       <div class="bottom-nav">
         <div class="bottom-nav__item" onclick="setScreen(2)"><div class="bottom-nav__icon bottom-nav__icon--active">⌂</div><span class="bottom-nav__label bottom-nav__label--active">Home</span></div>
-        <div class="bottom-nav__item"><div class="bottom-nav__icon">📋</div><span class="bottom-nav__label">Deals</span></div>
-        <div class="bottom-nav__item"><div class="bottom-nav__icon">💬</div><span class="bottom-nav__label">Chat</span><span class="bottom-nav__badge">3</span></div>
-        <div class="bottom-nav__item" onclick="setScreen(9)"><div class="bottom-nav__icon">◉</div><span class="bottom-nav__label">Me</span></div>
+        <div class="bottom-nav__item" onclick="setScreen(2)"><div class="bottom-nav__icon">📋</div><span class="bottom-nav__label">Deals</span></div>
+        <div class="bottom-nav__item" onclick="setScreen(15)"><div class="bottom-nav__icon">💬</div><span class="bottom-nav__label">Chat</span><span class="bottom-nav__badge">3</span></div>
+        <div class="bottom-nav__item" onclick="setScreen(16)"><div class="bottom-nav__icon">◉</div><span class="bottom-nav__label">Me</span></div>
       </div>
     </section>
 
@@ -612,11 +697,11 @@ textarea { font-family: inherit; }
       </div>
       <p class="eyebrow" style="margin-bottom:10px;">Choose Deal Type</p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
-        <div onclick="setScreen(4)" style="background:#fff;border-radius:12px;padding:14px;border:1.5px solid var(--pp-sand);position:relative;cursor:pointer;min-height:108px;transition:border-color .2s;">
+        <div onclick="setScreen(10)" style="background:#fff;border-radius:12px;padding:14px;border:1.5px solid var(--pp-sand);position:relative;cursor:pointer;min-height:108px;transition:border-color .2s;">
           <span style="position:absolute;top:6px;right:6px;font-size:8px;background:var(--pp-lime);color:var(--pp-ink);padding:2px 6px;border-radius:999px;font-weight:800;">POPULAR</span>
           <div style="width:36px;height:36px;border-radius:10px;background:rgba(0,168,107,.13);display:grid;place-items:center;font-size:18px;margin-bottom:8px;">🛍</div>
           <div style="font-size:13px;font-weight:800;margin-bottom:2px;">Buy / Sell</div>
-          <div style="font-size:10px;color:var(--pp-stone);">Products &amp; goods</div>
+          <div style="font-size:10px;color:var(--pp-stone);">Browse products</div>
         </div>
         <div onclick="setScreen(4)" style="background:#fff;border-radius:12px;padding:14px;border:1.5px solid var(--pp-sand);position:relative;cursor:pointer;min-height:108px;transition:border-color .2s;">
           <div style="width:36px;height:36px;border-radius:10px;background:rgba(61,127,255,.13);display:grid;place-items:center;font-size:18px;margin-bottom:8px;">🔧</div>
@@ -718,10 +803,11 @@ textarea { font-family: inherit; }
 
       <!-- Tracking pill (PRD enrichment — order tracking) -->
       <div style="padding:0 16px 12px;margin-top:10px;">
-        <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 10px;background:rgba(0,168,107,.08);border:1px solid rgba(0,168,107,.18);border-radius:999px;font-size:10px;color:var(--pp-forest);">
+        <div onclick="setScreen(12)" style="display:inline-flex;align-items:center;gap:8px;padding:6px 10px;background:rgba(0,168,107,.08);border:1px solid rgba(0,168,107,.18);border-radius:999px;font-size:10px;color:var(--pp-forest);cursor:pointer;">
           <span style="width:6px;height:6px;border-radius:50%;background:var(--pp-emerald);"></span>
           <span style="font-weight:700;">📦 In transit</span>
           <span style="font-family:var(--pp-font-mono);font-weight:700;color:var(--pp-charcoal);">DHL · NGR38291</span>
+          <span style="color:var(--pp-emerald);font-weight:800;">→ Track</span>
         </div>
       </div>
 
@@ -770,8 +856,8 @@ textarea { font-family: inherit; }
 
       <!-- Sticky action bar -->
       <div style="display:flex;gap:6px;padding:10px 16px 14px;background:var(--pp-cream);border-top:1px solid var(--pp-sand);">
-        <button class="btn-emerald" onclick="setScreen(2)">✓ I got the item — release funds</button>
-        <button style="padding:10px 14px;border-radius:8px;background:#fff;border:1px solid var(--pp-sand);font-size:14px;cursor:pointer;">💬</button>
+        <button class="btn-emerald" onclick="setScreen(13)">✓ I got it — release funds</button>
+        <button onclick="setScreen(15)" style="padding:10px 14px;border-radius:8px;background:#fff;border:1px solid var(--pp-sand);font-size:14px;cursor:pointer;">💬</button>
         <button onclick="setScreen(6)" style="padding:10px;border-radius:8px;background:rgba(255,107,74,.1);color:var(--pp-coral);border:1px solid rgba(255,107,74,.2);font-size:11px;font-weight:700;cursor:pointer;">⚠️</button>
       </div>
     </section>
@@ -1124,27 +1210,600 @@ textarea { font-family: inherit; }
       </div>
     </section>
 
+    <!-- ============================================================
+         SCREEN 11 · PRODUCT DETAIL (PRD Phase 1)
+         ============================================================ -->
+    <section class="screen" data-key="product" style="height:100%;background:var(--pp-cream);display:flex;flex-direction:column;">
+      <div style="padding:36px 16px 12px;display:flex;align-items:center;gap:10px;">
+        <span style="font-size:18px;cursor:pointer;" onclick="setScreen(2)">←</span>
+        <div style="flex:1;font-size:13px;font-weight:700;">Product</div>
+        <span style="font-size:18px;cursor:pointer;" title="Save">🤍</span>
+        <span style="font-size:18px;cursor:pointer;margin-left:6px;" title="Share">↗</span>
+      </div>
+      <div style="padding:0 16px 60px;flex:1;overflow:auto;">
+        <!-- Hero image -->
+        <div style="position:relative;background:linear-gradient(160deg,#1c2826 0%,#0f3530 100%);border-radius:16px;height:200px;display:grid;place-items:center;margin-bottom:14px;overflow:hidden;">
+          <div style="position:absolute;width:200px;height:200px;border-radius:50%;background:var(--pp-emerald);opacity:.18;filter:blur(40px);top:-30px;right:-40px;"></div>
+          <div style="font-size:80px;position:relative;">📦</div>
+          <div style="position:absolute;bottom:10px;right:12px;background:rgba(10,31,26,.6);backdrop-filter:blur(8px);color:var(--pp-cream);padding:4px 10px;border-radius:999px;font-size:10px;font-weight:700;font-family:var(--pp-font-mono);">1 / 5</div>
+          <div style="position:absolute;top:10px;left:12px;display:flex;gap:4px;">
+            <span style="padding:3px 8px;background:rgba(191,255,79,.18);color:var(--pp-lime);border-radius:999px;font-size:9px;font-weight:800;letter-spacing:.4px;">✓ ESCROW READY</span>
+          </div>
+        </div>
+        <!-- Title + price -->
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px;">
+          <div style="flex:1;">
+            <h2 style="font-size:18px;font-weight:900;letter-spacing:-.4px;line-height:1.2;">MacBook Pro M3</h2>
+            <div style="font-size:11px;color:var(--pp-stone);margin-top:3px;">M3 Pro · 18GB · 512GB · Space Black · Sealed</div>
+          </div>
+        </div>
+        <div style="font-size:24px;font-weight:900;letter-spacing:-.5px;font-variant-numeric:tabular-nums;margin-bottom:14px;">₦1,250,000</div>
+        <!-- Seller trust card -->
+        <div style="background:#fff;border:1px solid var(--pp-sand);border-radius:12px;padding:12px;margin-bottom:14px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+            <div style="width:38px;height:38px;border-radius:50%;background:var(--pp-forest);color:var(--pp-cream);display:grid;place-items:center;font-size:13px;font-weight:800;">TH</div>
+            <div style="flex:1;">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <div style="font-size:13px;font-weight:800;">TechHub CV</div>
+                <span style="padding:2px 6px;background:rgba(245,166,35,.15);color:#a07000;border-radius:999px;font-size:8px;font-weight:800;letter-spacing:.3px;">GOLD</span>
+                <span style="padding:2px 6px;background:rgba(0,168,107,.12);color:var(--pp-emerald);border-radius:999px;font-size:8px;font-weight:800;letter-spacing:.3px;">TRINITY ✓</span>
+              </div>
+              <div style="font-size:10px;color:var(--pp-stone);margin-top:2px;">Computer Village · Lagos</div>
+            </div>
+            <button style="padding:6px 10px;border-radius:8px;background:transparent;border:1px solid var(--pp-sand);font-size:11px;font-weight:700;color:var(--pp-charcoal);" onclick="setScreen(15)">💬</button>
+          </div>
+          <div style="display:flex;gap:14px;padding-top:8px;border-top:1px solid var(--pp-sand);font-size:10px;">
+            <div><div style="font-weight:800;color:var(--pp-charcoal);">₦500K</div><div style="color:var(--pp-stone);">staked</div></div>
+            <div><div style="font-weight:800;color:var(--pp-charcoal);">4.9★</div><div style="color:var(--pp-stone);">47 deals</div></div>
+            <div><div style="font-weight:800;color:var(--pp-charcoal);">0</div><div style="color:var(--pp-stone);">disputes</div></div>
+            <div><div style="font-weight:800;color:var(--pp-charcoal);">14m</div><div style="color:var(--pp-stone);">avg reply</div></div>
+          </div>
+        </div>
+        <!-- Description -->
+        <p class="eyebrow" style="margin-bottom:8px;">Description</p>
+        <p style="font-size:12px;line-height:1.6;color:var(--pp-charcoal);margin-bottom:14px;">Brand new, sealed MacBook Pro 14" with M3 Pro chip, 18GB unified memory, 512GB SSD. Bought from Apple Lagos with full receipt. 1-year Apple Care+ included. Delivery via DHL · 2-3 business days within Lagos.</p>
+        <!-- SafeGuard badge -->
+        <div style="background:rgba(0,168,107,.06);border:1px solid rgba(0,168,107,.2);border-radius:12px;padding:12px;margin-bottom:14px;display:flex;gap:12px;align-items:flex-start;">
+          <div style="width:36px;height:36px;border-radius:10px;background:rgba(0,168,107,.18);display:grid;place-items:center;font-size:18px;flex-shrink:0;">🛡</div>
+          <div>
+            <div style="font-size:12px;font-weight:800;color:var(--pp-forest);">SafeGuard covered</div>
+            <p style="font-size:10px;color:var(--pp-stone);margin-top:2px;line-height:1.5;">Up to ₦500K cover per incident. 95% of claims resolved within 48h. Funds locked at <strong>GTBank (CBN-licensed)</strong>.</p>
+          </div>
+        </div>
+        <!-- Reviews preview -->
+        <p class="eyebrow" style="margin-bottom:8px;">Recent reviews · 47</p>
+        <div style="background:#fff;border:1px solid var(--pp-sand);border-radius:12px;padding:12px;margin-bottom:14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <div style="font-size:11px;font-weight:800;">Ngozi K.</div>
+            <div style="font-size:11px;color:var(--pp-caution);">★★★★★</div>
+          </div>
+          <p style="font-size:11px;color:var(--pp-charcoal);line-height:1.5;">"Sharp delivery, item exactly as described. TechHub na correct paddy."</p>
+        </div>
+      </div>
+      <!-- Sticky CTA -->
+      <div style="padding:10px 16px 14px;background:var(--pp-cream);border-top:1px solid var(--pp-sand);display:flex;gap:8px;">
+        <button style="padding:14px 16px;border-radius:14px;background:#fff;border:1px solid var(--pp-sand);font-size:13px;font-weight:800;cursor:pointer;color:var(--pp-charcoal);" onclick="setScreen(15)">💬 Ask</button>
+        <button class="btn-primary" style="flex:1;" onclick="setScreen(11)">Buy with Escrow →</button>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         SCREEN 12 · ESCROW PAYMENT (PRD Phase 1)
+         ============================================================ -->
+    <section class="screen" data-key="payment" style="height:100%;background:var(--pp-cream);display:flex;flex-direction:column;">
+      <div style="padding:36px 16px 12px;display:flex;align-items:center;gap:10px;">
+        <span style="font-size:18px;cursor:pointer;" onclick="setScreen(10)">←</span>
+        <div style="flex:1;">
+          <div style="font-size:14px;font-weight:800;letter-spacing:-.3px;">Lock Funds in Escrow</div>
+          <div style="font-size:10px;color:var(--pp-stone);">Step 1 of 2 · Payment</div>
+        </div>
+        <span style="font-family:var(--pp-font-mono);font-size:10px;color:var(--pp-stone);">#PP-4829</span>
+      </div>
+      <div style="padding:0 16px 100px;flex:1;overflow:auto;">
+        <!-- Deal summary -->
+        <div style="background:#fff;border:1px solid var(--pp-sand);border-radius:12px;padding:12px;margin-bottom:14px;display:flex;align-items:center;gap:10px;">
+          <div style="width:40px;height:40px;border-radius:10px;background:rgba(0,168,107,.1);display:grid;place-items:center;font-size:18px;">📦</div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:800;">MacBook Pro M3</div>
+            <div style="font-size:10px;color:var(--pp-stone);">From TechHub CV · Trinity ✓</div>
+          </div>
+        </div>
+        <!-- Fee breakdown -->
+        <p class="eyebrow" style="margin-bottom:8px;">Fee breakdown</p>
+        <div style="background:#fff;border:1px solid var(--pp-sand);border-radius:12px;padding:14px;margin-bottom:14px;font-size:12px;font-variant-numeric:tabular-nums;">
+          <div style="display:flex;justify-content:space-between;padding:4px 0;"><span>Item price</span><span style="font-weight:700;">₦1,250,000</span></div>
+          <div style="display:flex;justify-content:space-between;padding:4px 0;color:var(--pp-stone);">
+            <span>Escrow fee · 1.5% <span style="font-size:10px;">ⓘ</span></span><span>+ ₦18,750</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:4px 0;color:var(--pp-stone);">
+            <span>SafeGuard pool · 2% <span style="font-size:10px;">ⓘ</span></span><span>+ ₦25,000</span>
+          </div>
+          <div style="height:1px;background:var(--pp-sand);margin:8px 0;"></div>
+          <div style="display:flex;justify-content:space-between;padding:4px 0;font-weight:900;font-size:14px;">
+            <span>You pay</span><span>₦1,293,750</span>
+          </div>
+          <div style="margin-top:6px;font-size:10px;color:var(--pp-emerald);">🔒 Funds released to seller only after you confirm receipt.</div>
+        </div>
+        <!-- Payment method picker -->
+        <p class="eyebrow" style="margin-bottom:8px;">Pay with</p>
+        <div class="pay-method" onclick="setPayMethod(0)" style="background:rgba(0,168,107,.04);border:1.5px solid var(--pp-emerald);border-radius:12px;padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .15s;">
+          <span style="width:20px;height:20px;border-radius:50%;border:1.5px solid var(--pp-emerald);background:var(--pp-emerald);display:grid;place-items:center;font-size:11px;font-weight:900;color:#fff;" class="pay-radio">✓</span>
+          <div style="font-size:20px;">🏦</div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:800;">Bank Transfer</div>
+            <div style="font-size:10px;color:var(--pp-stone);">Instant via NIBSS · Free</div>
+          </div>
+          <span style="font-size:9px;background:var(--pp-lime);color:var(--pp-ink);padding:2px 6px;border-radius:999px;font-weight:800;">FASTEST</span>
+        </div>
+        <div class="pay-method" onclick="setPayMethod(1)" style="background:#fff;border:1.5px solid var(--pp-sand);border-radius:12px;padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .15s;">
+          <span style="width:20px;height:20px;border-radius:50%;border:1.5px solid var(--pp-sand);background:#fff;" class="pay-radio"></span>
+          <div style="font-size:20px;">📱</div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:800;">USSD</div>
+            <div style="font-size:10px;color:var(--pp-stone);font-family:var(--pp-font-mono);">*999*1*4829# · No data needed</div>
+          </div>
+          <span style="font-size:18px;cursor:pointer;" onclick="event.stopPropagation();setScreen(7)">→</span>
+        </div>
+        <div class="pay-method" onclick="setPayMethod(2)" style="background:#fff;border:1.5px solid var(--pp-sand);border-radius:12px;padding:12px;margin-bottom:14px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .15s;">
+          <span style="width:20px;height:20px;border-radius:50%;border:1.5px solid var(--pp-sand);background:#fff;" class="pay-radio"></span>
+          <div style="font-size:20px;">💳</div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:800;">Debit / Credit Card</div>
+            <div style="font-size:10px;color:var(--pp-stone);">Visa / Mastercard / Verve</div>
+          </div>
+        </div>
+        <!-- Reassurance row -->
+        <div style="background:rgba(0,168,107,.05);border:1px dashed rgba(0,168,107,.25);border-radius:10px;padding:10px 12px;font-size:11px;color:var(--pp-forest);line-height:1.55;">
+          <strong>How escrow works:</strong> we lock your money at <strong>GTBank</strong>, notify the seller to ship. You get 48h after delivery to inspect. Confirm — funds released. Dispute — funds stay frozen, human review within 24h.
+        </div>
+      </div>
+      <!-- Sticky CTA -->
+      <div style="padding:10px 16px 14px;background:var(--pp-cream);border-top:1px solid var(--pp-sand);">
+        <button class="btn-primary" onclick="lockFunds()">🔒 Lock ₦1,293,750 in escrow</button>
+        <p style="font-size:10px;color:var(--pp-stone);text-align:center;margin-top:8px;">By tapping you agree to PayPaddy's escrow terms.</p>
+      </div>
+      <!-- Success overlay (shown briefly during lockFunds) -->
+      <div id="pay-success" style="display:none;position:absolute;inset:0;background:rgba(10,31,26,.96);backdrop-filter:blur(12px);z-index:50;flex-direction:column;align-items:center;justify-content:center;padding:32px;">
+        <div style="width:80px;height:80px;border-radius:24px;background:var(--pp-lime);display:grid;place-items:center;font-size:36px;transform:rotate(-6deg);margin-bottom:18px;animation:timerTick 1s ease-in-out infinite;">🔒</div>
+        <div style="font-size:11px;color:var(--pp-stone);font-weight:800;letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px;">FUNDS LOCKED</div>
+        <div style="font-size:24px;font-weight:900;color:var(--pp-cream);font-variant-numeric:tabular-nums;letter-spacing:-.5px;">₦1,293,750</div>
+        <div style="font-size:11px;color:var(--pp-lime);margin-top:6px;">at GTBank · CBN Licensed</div>
+        <div style="margin-top:20px;font-size:11px;color:var(--pp-stone);">Notifying seller… opening tracker</div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         SCREEN 13 · ORDER TRACKING (PRD Phase 1)
+         ============================================================ -->
+    <section class="screen" data-key="tracking" style="height:100%;background:var(--pp-cream);display:flex;flex-direction:column;">
+      <div style="padding:36px 16px 12px;display:flex;align-items:center;gap:10px;">
+        <span style="font-size:18px;cursor:pointer;" onclick="setScreen(2)">←</span>
+        <div style="flex:1;">
+          <div style="font-size:14px;font-weight:800;letter-spacing:-.3px;">Order Tracking</div>
+          <div style="font-size:10px;color:var(--pp-stone);font-family:var(--pp-font-mono);">#PP-4829 · MacBook Pro M3</div>
+        </div>
+        <span style="font-size:18px;cursor:pointer;" onclick="setScreen(4)" title="Open deal room">⋯</span>
+      </div>
+      <div style="padding:0 16px 100px;flex:1;overflow:auto;">
+        <!-- Mini vault -->
+        <div style="background:var(--t-vault-grad);border-radius:14px;padding:12px 14px;margin-bottom:14px;color:var(--pp-cream);display:flex;align-items:center;gap:12px;">
+          <div style="width:34px;height:34px;border-radius:10px;background:var(--t-highlight);display:grid;place-items:center;font-size:16px;color:var(--pp-ink);">🔒</div>
+          <div style="flex:1;">
+            <div style="font-size:9px;font-weight:800;letter-spacing:.6px;color:rgba(255,255,255,.7);">LOCKED</div>
+            <div style="font-size:16px;font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-.3px;">₦1,250,000</div>
+          </div>
+          <div style="font-size:9px;color:var(--t-highlight);text-align:right;">GTBank<br>CBN ✓</div>
+        </div>
+        <!-- 4-state timeline -->
+        <p class="eyebrow" style="margin-bottom:10px;">Delivery progress</p>
+        <div style="background:#fff;border:1px solid var(--pp-sand);border-radius:12px;padding:14px;margin-bottom:14px;">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+            <div style="width:20px;height:20px;border-radius:50%;background:var(--pp-emerald);color:#fff;display:grid;place-items:center;font-size:10px;font-weight:800;">✓</div>
+            <div style="flex:1;height:2px;background:var(--pp-emerald);"></div>
+            <div style="width:20px;height:20px;border-radius:50%;background:var(--pp-emerald);color:#fff;display:grid;place-items:center;font-size:10px;font-weight:800;">✓</div>
+            <div style="flex:1;height:2px;background:var(--pp-emerald);"></div>
+            <div style="width:20px;height:20px;border-radius:50%;background:var(--pp-apricot);color:var(--pp-ink);display:grid;place-items:center;font-size:10px;font-weight:800;animation:timerTick 1.5s ease-in-out infinite;">●</div>
+            <div style="flex:1;height:2px;background:var(--pp-sand);"></div>
+            <div style="width:20px;height:20px;border-radius:50%;background:var(--pp-sand);color:var(--pp-stone);display:grid;place-items:center;font-size:10px;font-weight:800;">4</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:9px;font-weight:700;margin-bottom:14px;">
+            <span style="color:var(--pp-emerald);">Placed</span>
+            <span style="color:var(--pp-emerald);">Notified</span>
+            <span style="color:var(--pp-apricot);">In transit</span>
+            <span style="color:var(--pp-stone);">Delivered</span>
+          </div>
+          <!-- Fake map -->
+          <div style="position:relative;height:140px;background:linear-gradient(180deg,#e8eae4 0%,#d4d8ce 100%);border-radius:10px;overflow:hidden;">
+            <svg width="100%" height="100%" style="position:absolute;opacity:.3;"><defs><pattern id="trkgrid" width="22" height="22" patternUnits="userSpaceOnUse"><path d="M 22 0 L 0 0 0 22" fill="none" stroke="#8B8680" stroke-width="0.5"/></pattern></defs><rect width="100%" height="100%" fill="url(#trkgrid)"/></svg>
+            <svg width="100%" height="100%" style="position:absolute;"><path d="M 30 110 Q 100 60, 180 90 T 250 50" stroke="var(--pp-emerald)" stroke-width="2" stroke-dasharray="4 3" fill="none"/></svg>
+            <!-- Origin pin -->
+            <div style="position:absolute;left:30px;top:110px;transform:translate(-50%,-50%);">
+              <div style="width:14px;height:14px;border-radius:50%;background:var(--pp-emerald);border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.2);"></div>
+              <div style="font-size:8px;font-weight:800;color:var(--pp-charcoal);margin-top:2px;text-align:center;transform:translateX(-50%);position:absolute;left:7px;white-space:nowrap;background:#fff;padding:1px 5px;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.1);">Computer Village</div>
+            </div>
+            <!-- Truck -->
+            <div style="position:absolute;left:140px;top:75px;font-size:20px;animation:timerTick 1.8s ease-in-out infinite;">🚚</div>
+            <!-- Destination -->
+            <div style="position:absolute;left:250px;top:50px;transform:translate(-50%,-50%);">
+              <div style="width:14px;height:14px;border-radius:50%;background:var(--pp-coral);border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.2);"></div>
+              <div style="font-size:8px;font-weight:800;color:var(--pp-charcoal);margin-top:2px;text-align:center;transform:translateX(-50%);position:absolute;left:7px;white-space:nowrap;background:#fff;padding:1px 5px;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.1);">You · Lekki</div>
+            </div>
+          </div>
+        </div>
+        <!-- Courier card -->
+        <p class="eyebrow" style="margin-bottom:8px;">Courier</p>
+        <div style="background:#fff;border:1px solid var(--pp-sand);border-radius:12px;padding:12px;margin-bottom:14px;display:flex;align-items:center;gap:12px;">
+          <div style="width:38px;height:38px;border-radius:10px;background:#FFCC00;display:grid;place-items:center;font-size:14px;font-weight:900;color:#D40511;">DHL</div>
+          <div style="flex:1;">
+            <div style="font-size:12px;font-weight:800;">DHL Express</div>
+            <div style="font-size:10px;color:var(--pp-stone);font-family:var(--pp-font-mono);">NGR38291 · ETA Apr 18</div>
+          </div>
+          <button style="padding:8px 12px;border-radius:8px;background:rgba(0,168,107,.1);color:var(--pp-emerald);border:1px solid rgba(0,168,107,.2);font-size:11px;font-weight:700;cursor:pointer;">📞</button>
+          <button style="padding:8px 12px;border-radius:8px;background:#fff;border:1px solid var(--pp-sand);font-size:11px;font-weight:700;cursor:pointer;color:var(--pp-charcoal);">💬</button>
+        </div>
+        <!-- Countdown -->
+        <div style="background:rgba(255,157,110,.1);border:1px dashed var(--pp-apricot);border-radius:12px;padding:12px;margin-bottom:14px;display:flex;align-items:center;gap:10px;">
+          <span style="font-size:24px;">⏳</span>
+          <div>
+            <div style="font-size:12px;font-weight:800;">Funds release in 2 days</div>
+            <p style="font-size:10px;color:var(--pp-stone);margin-top:2px;line-height:1.5;">If you don't dispute within 48h of delivery, funds auto-release to TechHub CV.</p>
+          </div>
+        </div>
+        <!-- Activity -->
+        <p class="eyebrow" style="margin-bottom:8px;">Activity</p>
+        <div style="background:rgba(0,168,107,.06);border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:11px;color:var(--pp-forest);">
+          <div style="font-size:9px;color:var(--pp-stone);font-family:var(--pp-font-mono);">Apr 16 · 08:15</div>
+          📦 Package picked up at Computer Village
+        </div>
+        <div style="background:rgba(0,168,107,.06);border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:11px;color:var(--pp-forest);">
+          <div style="font-size:9px;color:var(--pp-stone);font-family:var(--pp-font-mono);">Apr 16 · 14:42</div>
+          🚚 Out for delivery — arriving Apr 18
+        </div>
+      </div>
+      <!-- Sticky CTAs -->
+      <div style="padding:10px 16px 14px;background:var(--pp-cream);border-top:1px solid var(--pp-sand);display:flex;gap:6px;">
+        <button class="btn-emerald" onclick="setScreen(13)">✓ I got it — release funds</button>
+        <button onclick="setScreen(6)" style="padding:10px;border-radius:8px;background:rgba(255,107,74,.1);color:var(--pp-coral);border:1px solid rgba(255,107,74,.2);font-size:11px;font-weight:700;cursor:pointer;">⚠️</button>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         SCREEN 14 · RATINGS & REVIEWS (PRD Phase 2)
+         ============================================================ -->
+    <section class="screen" data-key="ratings" style="height:100%;background:var(--pp-cream);display:flex;flex-direction:column;">
+      <div style="padding:36px 16px 12px;display:flex;align-items:center;gap:10px;">
+        <span style="font-size:18px;cursor:pointer;" onclick="setScreen(12)">←</span>
+        <div style="flex:1;font-size:14px;font-weight:800;letter-spacing:-.3px;">Rate this deal</div>
+      </div>
+      <div style="padding:8px 16px 100px;flex:1;overflow:auto;">
+        <!-- Deal summary -->
+        <div style="background:#fff;border:1px solid var(--pp-sand);border-radius:12px;padding:12px;margin-bottom:18px;display:flex;align-items:center;gap:10px;">
+          <div style="width:38px;height:38px;border-radius:10px;background:rgba(0,168,107,.1);display:grid;place-items:center;font-size:18px;">📦</div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:800;">MacBook Pro M3</div>
+            <div style="font-size:10px;color:var(--pp-stone);">From <strong>TechHub CV</strong> · ₦1,250,000 · Apr 18</div>
+          </div>
+          <div style="font-size:9px;color:var(--pp-emerald);font-weight:700;background:rgba(0,168,107,.1);padding:3px 7px;border-radius:999px;">✓ DELIVERED</div>
+        </div>
+        <!-- Hero question -->
+        <h3 style="font-size:22px;font-weight:900;letter-spacing:-.5px;line-height:1.2;text-align:center;margin-bottom:6px;">How e be?</h3>
+        <p style="font-size:12px;color:var(--pp-stone);text-align:center;margin-bottom:24px;">Drop your honest gist. Other paddys will see this.</p>
+        <!-- 5-star -->
+        <div style="display:flex;justify-content:center;gap:10px;margin-bottom:10px;">
+          <span class="rate-star" onclick="setRating(1)" style="font-size:42px;color:var(--pp-sand);cursor:pointer;line-height:1;transition:color .15s,transform .1s;">☆</span>
+          <span class="rate-star" onclick="setRating(2)" style="font-size:42px;color:var(--pp-sand);cursor:pointer;line-height:1;transition:color .15s,transform .1s;">☆</span>
+          <span class="rate-star" onclick="setRating(3)" style="font-size:42px;color:var(--pp-sand);cursor:pointer;line-height:1;transition:color .15s,transform .1s;">☆</span>
+          <span class="rate-star" onclick="setRating(4)" style="font-size:42px;color:var(--pp-sand);cursor:pointer;line-height:1;transition:color .15s,transform .1s;">☆</span>
+          <span class="rate-star" onclick="setRating(5)" style="font-size:42px;color:var(--pp-sand);cursor:pointer;line-height:1;transition:color .15s,transform .1s;">☆</span>
+        </div>
+        <p id="rate-label" style="text-align:center;font-size:13px;font-weight:800;color:var(--pp-charcoal);margin-bottom:24px;">Tap a star</p>
+        <!-- Review textarea -->
+        <p class="eyebrow" style="margin-bottom:8px;">Your review (optional)</p>
+        <textarea placeholder="Item came on time, condition correct, seller dey reply sharp-sharp..." style="width:100%;min-height:90px;padding:12px;border-radius:12px;border:1.5px solid var(--pp-sand);background:#fff;font-size:12px;line-height:1.5;color:var(--pp-charcoal);resize:vertical;outline:none;box-sizing:border-box;font-family:inherit;margin-bottom:14px;"></textarea>
+        <!-- Quick tags -->
+        <p class="eyebrow" style="margin-bottom:8px;">Quick tags</p>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">
+          <span style="padding:6px 10px;background:#fff;border:1px solid var(--pp-sand);border-radius:999px;font-size:11px;font-weight:700;color:var(--pp-charcoal);cursor:pointer;">⚡ Fast delivery</span>
+          <span style="padding:6px 10px;background:#fff;border:1px solid var(--pp-sand);border-radius:999px;font-size:11px;font-weight:700;color:var(--pp-charcoal);cursor:pointer;">📦 Well packaged</span>
+          <span style="padding:6px 10px;background:#fff;border:1px solid var(--pp-sand);border-radius:999px;font-size:11px;font-weight:700;color:var(--pp-charcoal);cursor:pointer;">💬 Great communication</span>
+          <span style="padding:6px 10px;background:#fff;border:1px solid var(--pp-sand);border-radius:999px;font-size:11px;font-weight:700;color:var(--pp-charcoal);cursor:pointer;">✨ As described</span>
+        </div>
+        <!-- Privacy note -->
+        <div style="background:rgba(0,168,107,.05);border:1px solid rgba(0,168,107,.18);border-radius:8px;padding:10px;font-size:10px;color:var(--pp-forest);line-height:1.5;">
+          <strong>🔒 Public review</strong> — your name and review will be visible on TechHub CV's profile. Helps other paddys make better decisions.
+        </div>
+      </div>
+      <div style="padding:10px 16px 14px;background:var(--pp-cream);border-top:1px solid var(--pp-sand);">
+        <button id="rate-cta" class="btn-primary" disabled onclick="setScreen(2)" style="opacity:.5;cursor:not-allowed;">Submit review</button>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         SCREEN 15 · TRUST SCORE DETAIL (PRD Phase 2)
+         ============================================================ -->
+    <section class="screen" data-key="trust" style="height:100%;background:var(--pp-cream);display:flex;flex-direction:column;">
+      <div style="background:var(--t-header-grad);color:var(--pp-cream);padding:36px 16px 22px;border-radius:0 0 24px 24px;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:20px;right:20px;opacity:.18;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;">
+          <span style="width:4px;height:4px;border-radius:50%;background:var(--pp-lime);"></span><span style="width:4px;height:4px;border-radius:50%;background:var(--pp-lime);"></span><span style="width:4px;height:4px;border-radius:50%;background:var(--pp-lime);"></span>
+          <span style="width:4px;height:4px;border-radius:50%;background:var(--pp-lime);"></span><span style="width:4px;height:4px;border-radius:50%;background:var(--pp-lime);"></span><span style="width:4px;height:4px;border-radius:50%;background:var(--pp-lime);"></span>
+          <span style="width:4px;height:4px;border-radius:50%;background:var(--pp-lime);"></span><span style="width:4px;height:4px;border-radius:50%;background:var(--pp-lime);"></span><span style="width:4px;height:4px;border-radius:50%;background:var(--pp-lime);"></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;position:relative;">
+          <span style="font-size:18px;cursor:pointer;" onclick="setScreen(2)">←</span>
+          <div style="font-size:13px;font-weight:700;">Trust Score</div>
+        </div>
+        <!-- Conic ring -->
+        <div style="display:flex;align-items:center;gap:16px;position:relative;">
+          <div style="width:96px;height:96px;border-radius:50%;background:conic-gradient(var(--pp-lime) 0% 94%, rgba(255,255,255,.15) 94% 100%);display:grid;place-items:center;flex-shrink:0;">
+            <div style="width:74px;height:74px;border-radius:50%;background:var(--pp-forest);display:grid;place-items:center;text-align:center;">
+              <div>
+                <div style="font-size:22px;font-weight:900;color:var(--pp-cream);font-variant-numeric:tabular-nums;line-height:1;">850</div>
+                <div style="font-size:9px;color:rgba(255,255,255,.6);font-weight:600;">/ 900</div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:9px;font-weight:800;color:var(--pp-lime);letter-spacing:.6px;">PLATINUM PADDY 🛡</div>
+            <h3 style="font-size:18px;font-weight:900;letter-spacing:-.3px;line-height:1.2;margin-top:4px;">You dey top 5%<br>of all paddys</h3>
+            <p style="font-size:11px;color:rgba(255,255,255,.7);margin-top:6px;">+12 points this month</p>
+          </div>
+        </div>
+      </div>
+      <div style="padding:14px 16px 24px;flex:1;overflow:auto;">
+        <p class="eyebrow" style="margin-bottom:10px;">Score breakdown</p>
+        <div style="background:#fff;border:1px solid var(--pp-sand);border-radius:12px;padding:14px;margin-bottom:14px;">
+          <!-- Factor row template repeated -->
+          <div style="margin-bottom:12px;">
+            <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;margin-bottom:4px;"><span>Transactions · 25%</span><span style="color:var(--pp-emerald);">220 / 225</span></div>
+            <div style="height:5px;background:var(--pp-sand);border-radius:3px;overflow:hidden;"><div style="height:100%;width:98%;background:var(--pp-emerald);border-radius:3px;animation:progressFill 1s ease-out;"></div></div>
+          </div>
+          <div style="margin-bottom:12px;">
+            <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;margin-bottom:4px;"><span>Disputes · 20%</span><span style="color:var(--pp-emerald);">180 / 180</span></div>
+            <div style="height:5px;background:var(--pp-sand);border-radius:3px;overflow:hidden;"><div style="height:100%;width:100%;background:var(--pp-emerald);border-radius:3px;animation:progressFill 1.1s ease-out;"></div></div>
+          </div>
+          <div style="margin-bottom:12px;">
+            <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;margin-bottom:4px;"><span>Trinity verified · 20%</span><span style="color:var(--pp-emerald);">180 / 180</span></div>
+            <div style="height:5px;background:var(--pp-sand);border-radius:3px;overflow:hidden;"><div style="height:100%;width:100%;background:var(--pp-emerald);border-radius:3px;animation:progressFill 1.2s ease-out;"></div></div>
+          </div>
+          <div style="margin-bottom:12px;">
+            <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;margin-bottom:4px;"><span>Collateral · 15%</span><span style="color:var(--pp-apricot);">90 / 135</span></div>
+            <div style="height:5px;background:var(--pp-sand);border-radius:3px;overflow:hidden;"><div style="height:100%;width:67%;background:var(--pp-apricot);border-radius:3px;animation:progressFill 1.3s ease-out;"></div></div>
+          </div>
+          <div style="margin-bottom:12px;">
+            <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;margin-bottom:4px;"><span>Delivery speed · 10%</span><span style="color:var(--pp-emerald);">90 / 90</span></div>
+            <div style="height:5px;background:var(--pp-sand);border-radius:3px;overflow:hidden;"><div style="height:100%;width:100%;background:var(--pp-emerald);border-radius:3px;animation:progressFill 1.4s ease-out;"></div></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;margin-bottom:4px;"><span>Buyer ratings · 10%</span><span style="color:var(--pp-emerald);">90 / 90</span></div>
+            <div style="height:5px;background:var(--pp-sand);border-radius:3px;overflow:hidden;"><div style="height:100%;width:100%;background:var(--pp-emerald);border-radius:3px;animation:progressFill 1.5s ease-out;"></div></div>
+          </div>
+        </div>
+        <!-- Improvement tips -->
+        <p class="eyebrow" style="margin-bottom:8px;">Level up your score</p>
+        <div style="background:var(--pp-ink);color:var(--pp-cream);border-radius:14px;padding:14px;margin-bottom:14px;display:flex;gap:12px;align-items:flex-start;">
+          <div style="width:36px;height:36px;border-radius:10px;background:var(--pp-lime);display:grid;place-items:center;font-size:18px;flex-shrink:0;">⚡</div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:800;">Stake to Gold tier</div>
+            <p style="font-size:11px;color:var(--pp-stone);margin-top:3px;line-height:1.5;">Add ₦400K to your collateral to hit Gold and unlock +45 points instantly.</p>
+            <div style="margin-top:8px;display:inline-block;font-size:11px;color:var(--pp-lime);font-weight:800;cursor:pointer;">Stake collateral →</div>
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid var(--pp-sand);border-radius:14px;padding:14px;margin-bottom:14px;display:flex;gap:12px;align-items:flex-start;">
+          <div style="width:36px;height:36px;border-radius:10px;background:rgba(0,168,107,.1);display:grid;place-items:center;font-size:18px;flex-shrink:0;">🛍</div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:800;">Complete 5 more deals</div>
+            <p style="font-size:11px;color:var(--pp-stone);margin-top:3px;line-height:1.5;">Maxes out the Transactions factor — small but worth doing.</p>
+          </div>
+        </div>
+        <button style="width:100%;padding:12px;border-radius:14px;background:#fff;border:1.5px solid var(--pp-sand);font-size:13px;font-weight:800;cursor:pointer;color:var(--pp-charcoal);" onclick="setScreen(2)">↗ Share my badge</button>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         SCREEN 16 · CHAT INBOX (bottom-nav linked)
+         ============================================================ -->
+    <section class="screen" data-key="chat" style="height:100%;background:var(--pp-cream);display:flex;flex-direction:column;">
+      <div style="padding:36px 16px 12px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <h2 style="font-size:22px;font-weight:900;letter-spacing:-.5px;">Messages</h2>
+          <span style="font-size:18px;cursor:pointer;" title="New chat">✏️</span>
+        </div>
+        <input type="text" placeholder="Find a paddy or deal…" style="width:100%;padding:10px 14px;border-radius:999px;border:1px solid var(--pp-sand);background:#fff;font-size:12px;outline:none;font-family:inherit;color:var(--pp-charcoal);">
+      </div>
+      <div style="padding:8px 16px 80px;flex:1;overflow:auto;">
+        <!-- Conversation 1 -->
+        <div onclick="setScreen(4)" style="background:#fff;border:1px solid var(--pp-sand);border-radius:12px;padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;cursor:pointer;">
+          <div style="position:relative;">
+            <div style="width:42px;height:42px;border-radius:50%;background:var(--pp-forest);color:var(--pp-cream);display:grid;place-items:center;font-size:13px;font-weight:800;">TH</div>
+            <span style="position:absolute;bottom:0;right:0;width:11px;height:11px;border-radius:50%;background:var(--pp-emerald);border:2px solid #fff;"></span>
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+              <div style="font-size:13px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">TechHub CV</div>
+              <div style="font-size:9px;color:var(--pp-stone);flex-shrink:0;font-family:var(--pp-font-mono);">2h</div>
+            </div>
+            <div style="font-size:9px;color:var(--pp-emerald);font-weight:700;margin-top:1px;">📦 MacBook Pro M3 · in transit</div>
+            <div style="font-size:11px;color:var(--pp-charcoal);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">"Shipped via DHL — tracking NGR38291"</div>
+          </div>
+          <span style="background:var(--pp-coral);color:#fff;border-radius:999px;font-size:9px;font-weight:800;width:20px;height:20px;display:grid;place-items:center;flex-shrink:0;">2</span>
+        </div>
+        <!-- Conversation 2 -->
+        <div style="background:#fff;border:1px solid var(--pp-sand);border-radius:12px;padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;cursor:pointer;">
+          <div style="width:42px;height:42px;border-radius:50%;background:var(--pp-apricot);color:var(--pp-ink);display:grid;place-items:center;font-size:13px;font-weight:800;">LH</div>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+              <div style="font-size:13px;font-weight:800;">LagosHomes</div>
+              <div style="font-size:9px;color:var(--pp-stone);font-family:var(--pp-font-mono);">1d</div>
+            </div>
+            <div style="font-size:9px;color:var(--pp-emerald);font-weight:700;margin-top:1px;">🏠 Apartment Deposit · funded</div>
+            <div style="font-size:11px;color:var(--pp-stone);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">"All set for viewing tomorrow at 10am"</div>
+          </div>
+        </div>
+        <!-- Conversation 3 -->
+        <div style="background:#fff;border:1px solid var(--pp-sand);border-radius:12px;padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;cursor:pointer;">
+          <div style="width:42px;height:42px;border-radius:50%;background:rgba(191,255,79,.4);color:var(--pp-ink);display:grid;place-items:center;font-size:13px;font-weight:800;">CD</div>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+              <div style="font-size:13px;font-weight:800;">@ChuksD</div>
+              <div style="font-size:9px;color:var(--pp-stone);font-family:var(--pp-font-mono);">3d</div>
+            </div>
+            <div style="font-size:9px;color:var(--pp-caution);font-weight:700;margin-top:1px;">🎲 Super Eagles Bet · match day</div>
+            <div style="font-size:11px;color:var(--pp-stone);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">"My guy, Eagles dey win this one for sure 🦅"</div>
+          </div>
+        </div>
+        <!-- Conversation 4: PayPaddy support -->
+        <div style="background:#fff;border:1px solid var(--pp-sand);border-radius:12px;padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;cursor:pointer;">
+          <div style="width:42px;height:42px;border-radius:50%;background:var(--pp-ink);color:var(--pp-lime);display:grid;place-items:center;font-size:13px;font-weight:800;">PP</div>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+              <div style="font-size:13px;font-weight:800;">PayPaddy Support</div>
+              <div style="font-size:9px;color:var(--pp-stone);font-family:var(--pp-font-mono);">5d</div>
+            </div>
+            <div style="font-size:9px;color:var(--pp-info);font-weight:700;margin-top:1px;">🛡 Account & verification</div>
+            <div style="font-size:11px;color:var(--pp-stone);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">"Welcome to PayPaddy! Trinity ✓ complete."</div>
+          </div>
+        </div>
+      </div>
+      <!-- Bottom nav -->
+      <div class="bottom-nav">
+        <div class="bottom-nav__item" onclick="setScreen(2)"><div class="bottom-nav__icon">⌂</div><span class="bottom-nav__label">Home</span></div>
+        <div class="bottom-nav__item" onclick="setScreen(2)"><div class="bottom-nav__icon">📋</div><span class="bottom-nav__label">Deals</span></div>
+        <div class="bottom-nav__item"><div class="bottom-nav__icon bottom-nav__icon--active">💬</div><span class="bottom-nav__label bottom-nav__label--active">Chat</span></div>
+        <div class="bottom-nav__item" onclick="setScreen(16)"><div class="bottom-nav__icon">◉</div><span class="bottom-nav__label">Me</span></div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         SCREEN 17 · PROFILE / ME (bottom-nav linked)
+         ============================================================ -->
+    <section class="screen" data-key="me" style="height:100%;background:var(--pp-cream);display:flex;flex-direction:column;overflow:hidden;">
+      <div style="background:var(--t-header-grad);color:var(--pp-cream);padding:38px 16px 22px;border-radius:0 0 24px 24px;position:relative;overflow:hidden;">
+        <div style="position:absolute;width:140px;height:140px;border-radius:50%;background:var(--pp-emerald);opacity:.2;filter:blur(50px);top:-30px;right:-30px;"></div>
+        <div style="position:relative;display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+          <div style="width:56px;height:56px;border-radius:50%;background:var(--pp-apricot);color:var(--pp-ink);display:grid;place-items:center;font-size:18px;font-weight:900;">AO</div>
+          <div style="flex:1;">
+            <div style="font-size:16px;font-weight:900;letter-spacing:-.3px;">Ade Ogundimu</div>
+            <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;">
+              <span style="padding:3px 8px;background:rgba(191,255,79,.18);color:var(--pp-lime);border-radius:999px;font-size:9px;font-weight:800;letter-spacing:.3px;">TRINITY ✓</span>
+              <span style="padding:3px 8px;background:rgba(245,166,35,.18);color:#f5c542;border-radius:999px;font-size:9px;font-weight:800;letter-spacing:.3px;">PLATINUM PADDY</span>
+            </div>
+          </div>
+          <span style="font-size:18px;cursor:pointer;" title="Settings">⚙</span>
+        </div>
+        <div style="display:flex;gap:8px;position:relative;">
+          <div style="flex:1;background:rgba(255,255,255,.08);border-radius:10px;padding:8px 10px;">
+            <div style="font-size:8px;color:rgba(255,255,255,.6);font-weight:700;letter-spacing:.5px;">DEALS</div>
+            <div style="font-size:14px;font-weight:900;font-variant-numeric:tabular-nums;">47</div>
+          </div>
+          <div style="flex:1;background:rgba(255,255,255,.08);border-radius:10px;padding:8px 10px;">
+            <div style="font-size:8px;color:rgba(255,255,255,.6);font-weight:700;letter-spacing:.5px;">RATING</div>
+            <div style="font-size:14px;font-weight:900;">4.9★</div>
+          </div>
+          <div style="flex:1;background:rgba(255,255,255,.08);border-radius:10px;padding:8px 10px;">
+            <div style="font-size:8px;color:rgba(255,255,255,.6);font-weight:700;letter-spacing:.5px;">DISPUTES</div>
+            <div style="font-size:14px;font-weight:900;color:var(--pp-lime);">0</div>
+          </div>
+          <div style="flex:1;background:rgba(255,255,255,.08);border-radius:10px;padding:8px 10px;">
+            <div style="font-size:8px;color:rgba(255,255,255,.6);font-weight:700;letter-spacing:.5px;">SINCE</div>
+            <div style="font-size:14px;font-weight:900;">'24</div>
+          </div>
+        </div>
+      </div>
+      <div style="padding:14px 16px 80px;flex:1;overflow:auto;">
+        <!-- Trust Score quick link -->
+        <div onclick="setScreen(14)" style="background:var(--pp-ink);color:var(--pp-cream);border-radius:14px;padding:14px;margin-bottom:14px;display:flex;align-items:center;gap:12px;cursor:pointer;">
+          <div style="width:44px;height:44px;border-radius:50%;background:conic-gradient(var(--pp-lime) 0% 94%, rgba(255,255,255,.15) 94% 100%);display:grid;place-items:center;flex-shrink:0;">
+            <div style="width:34px;height:34px;border-radius:50%;background:var(--pp-ink);display:grid;place-items:center;font-size:11px;font-weight:900;color:var(--pp-cream);">850</div>
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:9px;font-weight:800;color:var(--pp-lime);letter-spacing:.5px;">TRUST SCORE</div>
+            <div style="font-size:13px;font-weight:800;">View breakdown & tips</div>
+          </div>
+          <span style="color:var(--pp-lime);font-size:18px;">→</span>
+        </div>
+        <!-- Become a seller -->
+        <div onclick="setScreen(9)" style="background:#fff;border:1.5px solid var(--pp-sand);border-radius:14px;padding:14px;margin-bottom:14px;display:flex;align-items:center;gap:12px;cursor:pointer;">
+          <div style="width:40px;height:40px;border-radius:10px;background:rgba(0,168,107,.1);display:grid;place-items:center;font-size:18px;">🏪</div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:800;">Switch to Merchant</div>
+            <div style="font-size:10px;color:var(--pp-stone);margin-top:2px;">Stake collateral, list products, get paid</div>
+          </div>
+          <span style="font-size:14px;color:var(--pp-stone);">→</span>
+        </div>
+        <!-- Settings list -->
+        <p class="eyebrow" style="margin-bottom:8px;">Account</p>
+        <div style="background:#fff;border:1px solid var(--pp-sand);border-radius:12px;overflow:hidden;margin-bottom:14px;">
+          <div style="padding:12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--pp-sand);cursor:pointer;">
+            <span style="font-size:18px;">👤</span><div style="flex:1;font-size:12px;font-weight:700;">Edit profile</div><span style="color:var(--pp-stone);">→</span>
+          </div>
+          <div onclick="setScreen(11)" style="padding:12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--pp-sand);cursor:pointer;">
+            <span style="font-size:18px;">💳</span><div style="flex:1;font-size:12px;font-weight:700;">Payment methods</div><span style="color:var(--pp-stone);font-size:10px;">3 saved →</span>
+          </div>
+          <div onclick="setScreen(5)" style="padding:12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--pp-sand);cursor:pointer;">
+            <span style="font-size:18px;">🛡</span><div style="flex:1;font-size:12px;font-weight:700;">Identity & Trinity</div><span style="color:var(--pp-emerald);font-size:10px;font-weight:700;">Verified ✓</span>
+          </div>
+          <div style="padding:12px;display:flex;align-items:center;gap:10px;cursor:pointer;">
+            <span style="font-size:18px;">🔔</span><div style="flex:1;font-size:12px;font-weight:700;">Notifications</div><span style="color:var(--pp-stone);">→</span>
+          </div>
+        </div>
+        <p class="eyebrow" style="margin-bottom:8px;">Help</p>
+        <div style="background:#fff;border:1px solid var(--pp-sand);border-radius:12px;overflow:hidden;">
+          <div onclick="setScreen(8)" style="padding:12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--pp-sand);cursor:pointer;">
+            <span style="font-size:18px;">📍</span><div style="flex:1;font-size:12px;font-weight:700;">Find an agent</div><span style="color:var(--pp-stone);">→</span>
+          </div>
+          <div onclick="setScreen(15)" style="padding:12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--pp-sand);cursor:pointer;">
+            <span style="font-size:18px;">💬</span><div style="flex:1;font-size:12px;font-weight:700;">Contact support</div><span style="color:var(--pp-stone);">→</span>
+          </div>
+          <div style="padding:12px;display:flex;align-items:center;gap:10px;cursor:pointer;color:var(--pp-coral);">
+            <span style="font-size:18px;">↗</span><div style="flex:1;font-size:12px;font-weight:700;">Sign out</div>
+          </div>
+        </div>
+      </div>
+      <!-- Bottom nav -->
+      <div class="bottom-nav">
+        <div class="bottom-nav__item" onclick="setScreen(2)"><div class="bottom-nav__icon">⌂</div><span class="bottom-nav__label">Home</span></div>
+        <div class="bottom-nav__item" onclick="setScreen(2)"><div class="bottom-nav__icon">📋</div><span class="bottom-nav__label">Deals</span></div>
+        <div class="bottom-nav__item" onclick="setScreen(15)"><div class="bottom-nav__icon">💬</div><span class="bottom-nav__label">Chat</span><span class="bottom-nav__badge">3</span></div>
+        <div class="bottom-nav__item"><div class="bottom-nav__icon bottom-nav__icon--active">◉</div><span class="bottom-nav__label bottom-nav__label--active">Me</span></div>
+      </div>
+    </section>
+
   </div>
 </div>
 
 <!-- KEYBOARD HINT -->
-<p class="hint"><kbd>←</kbd> <kbd>→</kbd> navigate screens</p>
+<p class="hint"><kbd>←</kbd> <kbd>→</kbd> arrow keys · or use the in-app navigation · <kbd>D</kbd> demo menu</p>
+
+<!-- DEMO NAVIGATOR (hidden by default — toggle bottom-right) -->
+<button class="demo-toggle" id="demoToggle" title="Demo navigator (D)" aria-label="Open demo navigator">◉</button>
+<aside class="demo-drawer" id="demoDrawer" aria-hidden="true">
+  <button class="demo-drawer__close" id="demoClose" aria-label="Close">✕</button>
+  <div class="demo-drawer__title">Scenes · 17</div>
+  <div id="demoList"></div>
+</aside>
 
 <script>
 // ============================================================
-// SCREEN REGISTRY
+// SCREEN REGISTRY (17 — order MUST match section order in HTML)
 // ============================================================
 const SCREENS = [
-  { key: 'splash',     label: 'Splash' },
-  { key: 'onboarding',label: 'Onboarding' },
-  { key: 'home',       label: 'Home' },
-  { key: 'create',     label: 'Create Deal' },
-  { key: 'room',       label: 'Deal Room' },
-  { key: 'trinity',    label: 'Trinity' },
-  { key: 'dispute',    label: 'Dispute' },
-  { key: 'ussd',       label: 'USSD Offline' },
-  { key: 'agents',     label: 'Agents' },
-  { key: 'merchant',   label: 'Merchant' },
+  { key: 'splash',     label: 'Splash',            group: 'Auth' },
+  { key: 'onboarding', label: 'Onboarding',        group: 'Auth' },
+  { key: 'home',       label: 'Home',              group: 'Buyer' },
+  { key: 'create',     label: 'Create Deal',       group: 'Buyer' },
+  { key: 'room',       label: 'Deal Room',         group: 'Buyer' },
+  { key: 'trinity',    label: 'Trinity',           group: 'Auth' },
+  { key: 'dispute',    label: 'Dispute',           group: 'Buyer' },
+  { key: 'ussd',       label: 'USSD Offline',      group: 'Buyer' },
+  { key: 'agents',     label: 'Agents',            group: 'Buyer' },
+  { key: 'merchant',   label: 'Merchant',          group: 'Seller' },
+  { key: 'product',    label: 'Product Detail',    group: 'Buyer' },
+  { key: 'payment',    label: 'Escrow Payment',    group: 'Buyer' },
+  { key: 'tracking',   label: 'Order Tracking',    group: 'Buyer' },
+  { key: 'ratings',    label: 'Ratings & Reviews', group: 'Buyer' },
+  { key: 'trust',      label: 'Trust Score',       group: 'Buyer' },
+  { key: 'chat',       label: 'Chat',              group: 'Buyer' },
+  { key: 'me',         label: 'Profile / Me',      group: 'Buyer' },
 ];
 
 // ============================================================
@@ -1155,20 +1814,35 @@ let currentScreen = parseInt(localStorage.getItem('pp-screen') || '0', 10);
 function setScreen(i) {
   currentScreen = Math.max(0, Math.min(SCREENS.length - 1, i));
   localStorage.setItem('pp-screen', String(currentScreen));
-  renderNav();
+  renderDemoDrawer();
   renderScreens();
   onScreenChange(SCREENS[currentScreen].key);
+  // scroll the active screen back to top whenever switching
+  const active = document.querySelectorAll('.screen')[currentScreen];
+  if (active) active.scrollTop = 0;
 }
 
-function renderNav() {
-  const tabsEl = document.getElementById('tabs');
-  tabsEl.innerHTML = '';
+function renderDemoDrawer() {
+  const list = document.getElementById('demoList');
+  if (!list) return;
+  list.innerHTML = '';
+  let lastGroup = null;
   SCREENS.forEach((s, i) => {
-    const btn = document.createElement('button');
-    btn.className = 'tab' + (i === currentScreen ? ' active' : '');
-    btn.textContent = s.label;
-    btn.onclick = () => setScreen(i);
-    tabsEl.appendChild(btn);
+    if (s.group !== lastGroup) {
+      lastGroup = s.group;
+      const hdr = document.createElement('div');
+      hdr.className = 'demo-drawer__title';
+      hdr.style.marginTop = i === 0 ? '0' : '14px';
+      hdr.textContent = s.group;
+      list.appendChild(hdr);
+    }
+    const row = document.createElement('div');
+    row.className = 'demo-drawer__item' + (i === currentScreen ? ' active' : '');
+    row.onclick = () => { setScreen(i); closeDrawer(); };
+    row.innerHTML =
+      '<span class="demo-drawer__num">' + String(i + 1).padStart(2, '0') + '</span>' +
+      '<span>' + s.label + '</span>';
+    list.appendChild(row);
   });
 }
 
@@ -1178,10 +1852,17 @@ function renderScreens() {
   });
 }
 
-// Arrow-key navigation
+function openDrawer()  { document.getElementById('demoDrawer').classList.add('open'); }
+function closeDrawer() { document.getElementById('demoDrawer').classList.remove('open'); }
+function toggleDrawer(){ document.getElementById('demoDrawer').classList.toggle('open'); }
+
+// Arrow-key navigation + D-key drawer toggle
 document.addEventListener('keydown', e => {
+  if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
   if (e.key === 'ArrowRight') setScreen(currentScreen + 1);
   if (e.key === 'ArrowLeft')  setScreen(currentScreen - 1);
+  if (e.key === 'd' || e.key === 'D') toggleDrawer();
+  if (e.key === 'Escape') closeDrawer();
 });
 
 // ============================================================
@@ -1295,14 +1976,78 @@ function renderUssdTimer() {
 }
 
 // ============================================================
+// RATINGS STATE (5-star selector)
+// ============================================================
+let ratingValue = 0;
+function setRating(v) {
+  ratingValue = v;
+  renderRating();
+}
+function renderRating() {
+  const labels = ['Tap a star', 'Poor', 'Fair', 'Good', 'Great', 'Perfect 🚀'];
+  document.querySelectorAll('.rate-star').forEach((el, i) => {
+    const filled = i < ratingValue;
+    el.style.color = filled ? 'var(--pp-caution)' : 'var(--pp-sand)';
+    el.textContent = filled ? '★' : '☆';
+  });
+  const lbl = document.getElementById('rate-label');
+  if (lbl) lbl.textContent = labels[ratingValue];
+  const cta = document.getElementById('rate-cta');
+  if (cta) {
+    cta.disabled = ratingValue === 0;
+    cta.style.opacity = ratingValue === 0 ? '.5' : '1';
+    cta.style.cursor  = ratingValue === 0 ? 'not-allowed' : 'pointer';
+  }
+}
+
+// ============================================================
+// PAYMENT METHOD STATE
+// ============================================================
+let payMethod = 0; // 0=Bank, 1=USSD, 2=Card
+function setPayMethod(i) {
+  payMethod = i;
+  renderPayMethod();
+}
+function renderPayMethod() {
+  document.querySelectorAll('.pay-method').forEach((el, i) => {
+    const active = i === payMethod;
+    el.style.borderColor = active ? 'var(--pp-emerald)' : 'var(--pp-sand)';
+    el.style.background  = active ? 'rgba(0,168,107,.04)' : '#fff';
+    const dot = el.querySelector('.pay-radio');
+    if (dot) {
+      dot.style.background = active ? 'var(--pp-emerald)' : '#fff';
+      dot.style.borderColor= active ? 'var(--pp-emerald)' : 'var(--pp-sand)';
+      dot.textContent      = active ? '✓' : '';
+    }
+  });
+}
+
+// ============================================================
+// PAYMENT LOCK ANIMATION
+// ============================================================
+function lockFunds() {
+  const overlay = document.getElementById('pay-success');
+  if (!overlay) return;
+  overlay.style.display = 'flex';
+  setTimeout(() => {
+    overlay.style.display = 'none';
+    setScreen(12); // → Order Tracking
+  }, 1800);
+}
+
+// ============================================================
 // BOOT
 // ============================================================
 window.addEventListener('DOMContentLoaded', () => {
-  renderNav();
+  renderDemoDrawer();
   renderScreens();
   renderOnboarding();
   renderDispute();
+  renderRating();
+  renderPayMethod();
   onScreenChange(SCREENS[currentScreen].key);
+  document.getElementById('demoToggle').onclick = toggleDrawer;
+  document.getElementById('demoClose').onclick  = closeDrawer;
 });
 </script>
 </body>
