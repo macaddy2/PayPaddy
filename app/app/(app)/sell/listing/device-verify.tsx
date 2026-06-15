@@ -16,14 +16,12 @@ import { useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { BackHeader, Button, Screen } from '@/ui';
-import { useSeller } from '@/state';
 import { api } from '@/services/api';
 import { colors, spacing, typography } from '@/theme';
 
 export default function DeviceVerifyScreen() {
   const { listingId } = useLocalSearchParams<{ listingId: string }>();
   const router = useRouter();
-  const { listings, createListing } = useSeller();
   const [imei, setImei] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; reason?: string } | null>(null);
@@ -40,6 +38,7 @@ export default function DeviceVerifyScreen() {
       const res = await api.device.verifyIMEIViaNCC(imei);
       setResult(res);
       if (res.ok) {
+        if (listingId) await api.listings.markImeiVerified(listingId, imei);
         // Update the listing with verified IMEI then navigate to publish.
         router.push({ pathname: '/(app)/sell/listing/publish', params: { listingId, imei, imeiVerified: 'true' } });
       }
@@ -58,7 +57,7 @@ export default function DeviceVerifyScreen() {
         <Text style={styles.heading}>Verify the device IMEI</Text>
         <Text style={styles.sub}>
           We check the NCC database to confirm this device isn't stolen.
-          Verified listings earn a badge that dramatically increases buyer trust.
+          Verified payment links earn a badge that dramatically increases buyer trust.
         </Text>
 
         <View style={styles.howTo}>
