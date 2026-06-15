@@ -50,6 +50,7 @@ export const spacing = {
   xl: 20,
   xxl: 24,
   xxxl: 32,
+  huge: 40,
 } as const;
 
 export const radii = {
@@ -64,14 +65,17 @@ export const radii = {
  * small" UX finding. Weight values follow React Native's cross-platform set.
  */
 export const typography = {
-  display: { size: 32, weight: '800' as const, lineHeight: 38 },
-  h1: { size: 26, weight: '700' as const, lineHeight: 32 },
-  h2: { size: 20, weight: '700' as const, lineHeight: 26 },
-  h3: { size: 17, weight: '600' as const, lineHeight: 22 },
+  family: 'Manrope, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+  monoFamily: '"JetBrains Mono", "Courier New", monospace',
+  display: { size: 40, weight: '900' as const, lineHeight: 42 },
+  h1: { size: 26, weight: '900' as const, lineHeight: 30 },
+  h2: { size: 22, weight: '800' as const, lineHeight: 27 },
+  h3: { size: 18, weight: '800' as const, lineHeight: 23 },
   body: { size: 15, weight: '500' as const, lineHeight: 22 },
   bodySm: { size: 14, weight: '500' as const, lineHeight: 20 }, // minimum body
   label: { size: 12, weight: '700' as const, lineHeight: 16 }, // uppercase pills
   caption: { size: 11, weight: '600' as const, lineHeight: 14 },
+  money: { size: 32, weight: '900' as const, lineHeight: 36 },
   mono: { size: 18, weight: '700' as const, lineHeight: 22 }, // USSD codes, OTP
 } as const;
 

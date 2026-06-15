@@ -26,23 +26,31 @@ import { computeFees, computeSlash } from '@/domain/money';
 import {
   Agent,
   CashInCode,
+  CommerceIntentDetail,
+  CommerceIntentFilters,
   Deal,
   Dispute,
   DisputePayoutBreakdown,
+  IntegrationPartner,
   Listing,
-  TrinityStatus,
   User,
   VirtualAccount,
   Wallet,
-  type DealCategory,
-  type DisputeReason,
-  type DisputeVerdict,
+} from '@/domain/schema';
+import type {
+  CommerceIntent,
+  DealCategory,
+  DisputeReason,
+  DisputeVerdict,
+  TrinityStatus,
 } from '@/domain/schema';
 import { logger } from './logger';
 import {
   agents as agentsStore,
+  commerceIntents as commerceIntentsStore,
   currentUserId,
   deals as dealsStore,
+  integrationPartners as integrationPartnersStore,
   listings as listingsStore,
   sellers as sellersStore,
   users as usersStore,
@@ -416,6 +424,8 @@ export const listings = {
     category: DealCategory;
     imei?: string;
     imeiVerified?: boolean;
+    city?: string;
+    imageEmoji?: string;
   }): Promise<Listing> {
     await sleep(SLA_MS.generic);
     const l: Listing = {
@@ -427,10 +437,135 @@ export const listings = {
       category: input.category,
       imei: input.imei,
       imeiVerified: input.imeiVerified,
+      city: input.city ?? 'Lagos',
+      imageEmoji: input.imageEmoji ?? '🛍️',
+      status: 'draft',
       createdAt: nowIso(),
     };
     listingsStore[l.id] = l;
     return Listing.parse(l);
+  },
+
+  async markImeiVerified(listingId: string, imei: string): Promise<Listing> {
+    await sleep(SLA_MS.generic);
+    const l = listingsStore[listingId];
+    if (!l) throw new Error('Listing not found');
+    l.imei = imei;
+    l.imeiVerified = true;
+    return Listing.parse(l);
+  },
+};
+
+// -------------------------
+// Commerce integrations
+// -------------------------
+
+function intentDetailFor(intent: CommerceIntent): CommerceIntentDetail {
+  const partner = integrationPartnersStore[intent.partnerId];
+  if (!partner) throw new Error('Integration partner not found');
+  return CommerceIntentDetail.parse({ ...intent, partner });
+}
+
+export const commerce = {
+  async listPartners(): Promise<IntegrationPartner[]> {
+    await sleep(SLA_MS.generic);
+    return Object.values(integrationPartnersStore).map((partner) => IntegrationPartner.parse(partner));
+  },
+
+  async getPartner(id: string): Promise<IntegrationPartner> {
+    await sleep(SLA_MS.generic);
+    const partner = integrationPartnersStore[id];
+    if (!partner) throw new Error('Integration partner not found');
+    return IntegrationPartner.parse(partner);
+  },
+
+  async listIntents(filters: CommerceIntentFilters = {}): Promise<CommerceIntentDetail[]> {
+    await sleep(SLA_MS.generic);
+    const parsed = CommerceIntentFilters.parse(filters);
+    const query = parsed.query?.trim().toLowerCase();
+    const intents = Object.values(commerceIntentsStore)
+      .filter((intent) => intent.status === 'ready')
+      .filter((intent) => (parsed.category ? intent.category === parsed.category : true))
+      .filter((intent) => (parsed.partnerId ? intent.partnerId === parsed.partnerId : true))
+      .filter((intent) => {
+        const partner = integrationPartnersStore[intent.partnerId];
+        if (parsed.mode && partner?.integrationMode !== parsed.mode) return false;
+        if (!query) return true;
+        return `${intent.title} ${intent.description} ${intent.city} ${partner?.name ?? ''}`.toLowerCase().includes(query);
+      })
+      .map(intentDetailFor)
+      .sort((a, b) => b.partner.trustScore - a.partner.trustScore);
+    return intents;
+  },
+
+  async getIntent(id: string): Promise<CommerceIntentDetail> {
+    await sleep(SLA_MS.generic);
+    const intent = commerceIntentsStore[id];
+    if (!intent) throw new Error('Commerce intent not found');
+    return intentDetailFor(intent);
+  },
+
+  async createIntent(input: {
+    source: CommerceIntent['source'];
+    externalRef: string;
+    partnerId: string;
+    sellerId: string;
+    title: string;
+    description: string;
+    amountKobo: number;
+    category: DealCategory;
+    returnUrl?: string;
+  }): Promise<CommerceIntentDetail> {
+    await sleep(SLA_MS.generic);
+    const partner = integrationPartnersStore[input.partnerId];
+    if (!partner) throw new Error('Integration partner not found');
+    const intent: CommerceIntent = {
+      id: nid('intent'),
+      source: input.source,
+      externalRef: input.externalRef,
+      partnerId: input.partnerId,
+      sellerId: input.sellerId,
+      title: input.title,
+      description: input.description,
+      amountKobo: input.amountKobo,
+      category: input.category,
+      city: partner.city,
+      imageEmoji: input.category === 'commerce' ? '🛍️' : '📄',
+      status: 'ready',
+      returnUrl: input.returnUrl,
+      createdAt: nowIso(),
+      expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
+    };
+    commerceIntentsStore[intent.id] = intent;
+    return intentDetailFor(intent);
+  },
+
+  async createDealFromIntent(input: {
+    intentId: string;
+    buyerId: string;
+  }): Promise<Deal> {
+    await sleep(SLA_MS.generic);
+    const intent = commerceIntentsStore[input.intentId];
+    if (!intent) throw new Error('Commerce intent not found');
+    if (intent.status !== 'ready') throw new Error('This commerce intent is no longer active');
+    const sellerTier: TierKey = sellersStore[intent.sellerId]?.tier ?? 'silver';
+    const deal: Deal = {
+      id: nid('deal'),
+      title: intent.title,
+      category: intent.category,
+      grossKobo: intent.amountKobo,
+      buyerId: input.buyerId,
+      sellerId: intent.sellerId,
+      sellerTier,
+      status: 'awaiting_funds',
+      createdAt: nowIso(),
+      timeline: [
+        { at: nowIso(), kind: 'created', actor: 'buyer', note: `Started from ${intent.externalRef}` },
+      ],
+    };
+    dealsStore[deal.id] = deal;
+    intent.status = 'deal_created';
+    return Deal.parse(deal);
   },
 };
 
@@ -473,7 +608,17 @@ export const sellersApi = {
 // Disputes
 // -------------------------
 
-const disputesStore: Record<string, Dispute> = {};
+const disputesStore: Record<string, Dispute> = {
+  'disp_sneakers': {
+    id: 'disp_sneakers',
+    dealId: 'deal_sneakers',
+    openedAt: nowIso(),
+    reason: 'wrong_item',
+    description: 'Buyer says the sneakers arrived in the wrong size and seller did not include original receipt.',
+    evidenceUrls: ['photo:sneakers-size-tag', 'chat:seller-confirmed-size'],
+    status: 'under_review',
+  },
+};
 
 export const disputes = {
   /** Open a dispute from the buyer side. Transitions the deal → `disputed`. */
@@ -507,6 +652,45 @@ export const disputes = {
     await sleep(SLA_MS.generic);
     const d = disputesStore[id];
     if (!d) throw new Error('Dispute not found');
+    return Dispute.parse(d);
+  },
+
+  async listAdminQueue(): Promise<Dispute[]> {
+    await sleep(SLA_MS.generic);
+    return Object.values(disputesStore)
+      .filter((d) => d.status !== 'resolved')
+      .map((d) => Dispute.parse(d));
+  },
+
+  async addEvidence(disputeId: string, evidence: string): Promise<Dispute> {
+    await sleep(SLA_MS.generic);
+    const d = disputesStore[disputeId];
+    if (!d) throw new Error('Dispute not found');
+    d.evidenceUrls = [...d.evidenceUrls, evidence].slice(0, 6);
+    d.status = 'under_review';
+    return Dispute.parse(d);
+  },
+
+  async resolve(disputeId: string, verdict: DisputeVerdict): Promise<Dispute> {
+    if (verdict === 'buyer_wins') return disputes.resolveBuyerWins(disputeId);
+    await sleep(SLA_MS.generic);
+    const d = disputesStore[disputeId];
+    if (!d) throw new Error('Dispute not found');
+    const deal = dealsStore[d.dealId];
+    if (!deal) throw new Error('Deal not found');
+    const fees = computeFees(deal.grossKobo, deal.sellerTier);
+    const payout: DisputePayoutBreakdown = DisputePayoutBreakdown.parse({
+      fromCollateralKobo: 0,
+      fromSafeguardPoolKobo: 0,
+      toBuyerKobo: verdict === 'split' ? Math.floor(deal.grossKobo / 2) : 0,
+      toSellerKobo: verdict === 'split' ? Math.floor(fees.netToSellerKobo / 2) : fees.netToSellerKobo,
+    });
+    d.status = 'resolved';
+    d.verdict = verdict;
+    d.resolvedAt = nowIso();
+    d.payout = payout;
+    deal.status = verdict === 'seller_wins' ? 'settled' : 'refunded';
+    deal.timeline.push({ at: nowIso(), kind: 'dispute_resolved', actor: 'admin' });
     return Dispute.parse(d);
   },
 
@@ -566,6 +750,7 @@ export const api = {
   agents: agentsApi,
   device,
   listings,
+  commerce,
   sellers: sellersApi,
   disputes,
 };

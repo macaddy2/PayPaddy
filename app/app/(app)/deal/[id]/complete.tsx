@@ -23,13 +23,14 @@ export default function CompleteScreen() {
 
   if (!deal) return null;
 
-  const fees = computeFees(deal.grossKobo, deal.sellerTier);
+  const currentDeal = deal;
+  const fees = computeFees(currentDeal.grossKobo, currentDeal.sellerTier);
 
   async function handleConfirm() {
     setLoading(true);
-    await confirmReceipt(deal.id);
+    await confirmReceipt(currentDeal.id);
     setLoading(false);
-    router.replace({ pathname: '/(app)/deal/[id]/receipt', params: { id: deal.id } });
+    router.replace({ pathname: '/(app)/deal/[id]/receipt', params: { id: currentDeal.id } });
   }
 
   return (
@@ -39,7 +40,7 @@ export default function CompleteScreen() {
       <View style={styles.body}>
         <Text style={styles.heading}>You got it?</Text>
         <Text style={styles.sub}>
-          Confirm that you received "{deal.title}" and the deal is settled.
+          Confirm that you received "{currentDeal.title}" and the deal is settled.
           This releases the funds to the seller.
         </Text>
 
@@ -47,7 +48,7 @@ export default function CompleteScreen() {
         <Card>
           <Text style={styles.breakdownTitle}>Fee Breakdown</Text>
           <FeeRow label="Deal amount" value={fees.grossKobo} />
-          <FeeRow label={`Escrow fee (${deal.sellerTier})`} value={-fees.escrowFeeKobo} />
+          <FeeRow label={`Escrow fee (${currentDeal.sellerTier})`} value={-fees.escrowFeeKobo} />
           <FeeRow label="SafeGuard levy" value={-fees.safeguardKobo} />
           <View style={styles.divider} />
           <FeeRow label="Seller receives" value={fees.netToSellerKobo} highlight />
@@ -64,7 +65,7 @@ export default function CompleteScreen() {
         <Button label={loading ? 'Confirming…' : 'Yes, I received it'} onPress={handleConfirm} loading={loading} />
         <Button
           label="Something is wrong — dispute"
-          onPress={() => router.push({ pathname: '/(app)/deal/[id]/dispute/open', params: { id: deal.id } })}
+          onPress={() => router.push({ pathname: '/(app)/deal/[id]/dispute/open', params: { id: currentDeal.id } })}
           variant="danger"
         />
       </View>

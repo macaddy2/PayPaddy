@@ -24,16 +24,18 @@ type DealsState = {
   loadOne: (dealId: string) => Promise<void>;
   createDeal: (input: {
     buyerId: string;
+    sellerId?: string;
     title: string;
     grossKobo: number;
     category: DealCategory;
   }) => Promise<Deal>;
+  createDealFromIntent: (input: { intentId: string; buyerId: string }) => Promise<Deal>;
   fundViaVirtualAccount: (dealId: string) => Promise<VirtualAccount>;
   confirmReceipt: (dealId: string) => Promise<Deal>;
   clearError: () => void;
 };
 
-export const useDeals = create<DealsState>((set, get) => ({
+export const useDeals = create<DealsState>((set) => ({
   byId: {},
   listLoading: false,
   error: null,
@@ -66,6 +68,18 @@ export const useDeals = create<DealsState>((set, get) => ({
     set({ error: null });
     try {
       const deal = await api.deals.create(input);
+      set((s) => ({ byId: { ...s.byId, [deal.id]: deal } }));
+      return deal;
+    } catch (e) {
+      set({ error: (e as Error).message });
+      throw e;
+    }
+  },
+
+  async createDealFromIntent(input) {
+    set({ error: null });
+    try {
+      const deal = await api.commerce.createDealFromIntent(input);
       set((s) => ({ byId: { ...s.byId, [deal.id]: deal } }));
       return deal;
     } catch (e) {

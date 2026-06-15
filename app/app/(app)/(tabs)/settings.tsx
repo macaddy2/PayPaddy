@@ -88,10 +88,12 @@ export default function SettingsTab() {
       </Card>
 
       {/* Settings links */}
-      <Card style={styles.section}>
+      <Card style={styles.section} light>
         <Text style={styles.sectionLabel}>MORE</Text>
+        <SettingRow label="Commerce integrations" onPress={() => router.push('/(app)/(tabs)/commerce')} />
+        <SettingRow label="Admin dispute review" onPress={() => router.push('/(app)/admin/disputes')} />
         <SettingRow label="Start selling" onPress={() => router.push('/(app)/sell/tier')} />
-        <SettingRow label="My listings" onPress={() => router.push('/(app)/sell/dashboard')} />
+        <SettingRow label="My payment links" onPress={() => router.push('/(app)/sell/dashboard')} />
         <SettingRow label="Terms of Service" onPress={() => {}} />
         <SettingRow label="Privacy Policy" onPress={() => {}} />
         <SettingRow label="Sign out" onPress={handleSignOut} danger />

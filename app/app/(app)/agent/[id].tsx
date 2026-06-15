@@ -9,7 +9,7 @@
  * a realistic random 6-digit string with an expiry time.
  */
 
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, StyleSheet, Text, TouchableOpacity, View, Clipboard } from 'react-native';
 
@@ -20,7 +20,6 @@ import type { Agent, CashInCode } from '@/domain/schema';
 
 export default function AgentDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const router = useRouter();
   const [agent, setAgent] = useState<Agent | null>(null);
   const [cashInCode, setCashInCode] = useState<CashInCode | null>(null);
   const [generating, setGenerating] = useState(false);
