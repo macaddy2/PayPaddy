@@ -1,34 +1,19 @@
-/**
- * Home tab — the primary dashboard.
- *
- * Shows:
- *  1. Escrow balance card (locked funds + available wallet balance)
- *  2. Primary CTA — "Start a New Deal"
- *  3. Active deals list
- *
- * Data is loaded from the wallet and deals stores on mount. The escrow
- * balance card uses the vault metaphor from the v2 design prototype.
- */
-
 import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { Button, Card, Pill, Screen } from '@/ui';
+import { DealCard, Eyebrow, MetricCard, Screen, TrustPill, VaultCard } from '@/ui';
 import { useAuth, useDeals, useWallet } from '@/state';
-import { formatNaira } from '@/domain/money';
-import { colors, spacing, typography } from '@/theme';
+import { colors, radii, spacing, typography } from '@/theme';
 
 export default function HomeScreen() {
   const router = useRouter();
   const user = useAuth((s) => s.user);
   const { wallet, load: loadWallet } = useWallet();
-  const { byId, listLoading, loadAll } = useDeals();
+  const { byId, loadAll } = useDeals();
 
   const deals = Object.values(byId);
   const activeDeals = deals.filter((d) => !['settled', 'refunded'].includes(d.status));
-
-  // How much is currently locked in escrow (funded + in_progress + delivered deals)
   const lockedKobo = activeDeals
     .filter((d) => ['funded', 'in_progress', 'delivered', 'disputed'].includes(d.status))
     .reduce((sum, d) => sum + d.grossKobo, 0);
@@ -40,193 +25,115 @@ export default function HomeScreen() {
   }, [user, loadWallet, loadAll]);
 
   return (
-    <Screen bg={colors.ink} padH={false}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.greeting}>Good day{user?.firstName ? `, ${user.firstName}` : ''} 👋</Text>
-          <Text style={styles.sub}>Your escrow wallet</Text>
-        </View>
-        <TouchableOpacity style={styles.notifBtn}>
-          <Text style={styles.notifIcon}>🔔</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Escrow balance card */}
-      <View style={styles.pad}>
-        <Card style={styles.balanceCard}>
-          <View style={styles.balanceRow}>
-            <View>
-              <Text style={styles.balanceLabel}>LOCKED IN ESCROW</Text>
-              <Text style={styles.balanceAmount}>{formatNaira(lockedKobo)}</Text>
+    <Screen bg={colors.cream} padH={false}>
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <View style={styles.collar}>
+          <View style={styles.topRow}>
+            <View style={styles.identity}>
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>{(user?.firstName ?? 'AO').slice(0, 2).toUpperCase()}</Text>
+              </View>
+              <View>
+                <Text style={styles.welcome}>Welcome back, {user?.firstName ?? 'Ade'} 👋</Text>
+                <Text style={styles.sub}>Money no go waka.</Text>
+              </View>
             </View>
-            <Text style={styles.vaultIcon}>🔒</Text>
+            <Text style={styles.bell}>🔔</Text>
           </View>
-          <View style={styles.availableRow}>
-            <Text style={styles.availableLabel}>Available</Text>
-            <Text style={styles.availableAmount}>
-              {formatNaira(wallet?.availableKobo ?? 0)}
-            </Text>
-          </View>
-        </Card>
-
-        {/* Primary CTA */}
-        <Button
-          label="Start a New Deal"
-          onPress={() => router.push('/(app)/deal/new')}
-          style={styles.cta}
-        />
-      </View>
-
-      {/* Active deals */}
-      <Text style={[styles.sectionTitle, styles.pad]}>Active Deals</Text>
-
-      {activeDeals.length === 0 && !listLoading ? (
-        <View style={[styles.empty, styles.pad]}>
-          <Text style={styles.emptyText}>No active deals. Start one above!</Text>
+          <VaultCard amountKobo={lockedKobo} label="LOCKED IN ESCROW" bank={`across ${activeDeals.length} active deals`} />
         </View>
-      ) : (
-        <FlatList
-          data={activeDeals}
-          keyExtractor={(d) => d.id}
-          contentContainerStyle={styles.list}
-          showsVerticalScrollIndicator={false}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              onPress={() => router.push({ pathname: '/(app)/deal/[id]', params: { id: item.id } })}
-              activeOpacity={0.85}
-            >
-              <Card
-                style={styles.dealCard}
-                // Urgent: deals approaching auto-release get a coral accent
-                accent={
-                  item.autoReleaseAt && new Date(item.autoReleaseAt).getTime() - Date.now() < 3 * 60 * 60 * 1000
-                    ? colors.coral
-                    : undefined
-                }
-              >
-                <View style={styles.dealRow}>
-                  <View style={styles.dealInfo}>
-                    <Text style={styles.dealTitle} numberOfLines={1}>{item.title}</Text>
-                    <Text style={styles.dealAmount}>{formatNaira(item.grossKobo)}</Text>
-                  </View>
-                  <StatusPill status={item.status} />
-                </View>
-              </Card>
-            </TouchableOpacity>
-          )}
-        />
-      )}
+
+        <View style={styles.body}>
+          <TouchableOpacity activeOpacity={0.88} style={styles.primaryCta} onPress={() => router.push('/(app)/deal/new')}>
+            <View style={styles.plus}><Text style={styles.plusText}>+</Text></View>
+            <Text style={styles.primaryCtaText}>Start a New Deal</Text>
+          </TouchableOpacity>
+
+          <View style={styles.quickRow}>
+            <QuickChip label="Integrations" onPress={() => router.push('/(app)/(tabs)/commerce')} />
+            <QuickChip label="Pay Offline" onPress={() => router.push('/(app)/(tabs)/agents')} />
+            <QuickChip label="Admin" onPress={() => router.push('/(app)/admin/disputes')} />
+          </View>
+
+          <View style={styles.metricRow}>
+            <MetricCard label="available" value={shortNaira(wallet?.availableKobo ?? 0)} tone="safe" />
+            <MetricCard label="Trust Score" value="92" tone="info" />
+            <MetricCard label="SafeGuard" value="Live" tone="caution" />
+          </View>
+
+          <View style={styles.sectionHead}>
+            <Eyebrow>Active Deals · {activeDeals.length}</Eyebrow>
+            <TrustPill label="TRINITY ✓" tone="safe" />
+          </View>
+
+          <View style={styles.stack}>
+            {activeDeals.map((deal) => (
+              <DealCard
+                key={deal.id}
+                title={deal.title}
+                meta={`${deal.category.replace('_', ' ')} · ${deal.status.replace('_', ' ')}`}
+                amountKobo={deal.grossKobo}
+                urgent={deal.status === 'disputed'}
+                onPress={() => router.push({ pathname: '/(app)/deal/[id]', params: { id: deal.id } })}
+              />
+            ))}
+          </View>
+        </View>
+      </ScrollView>
     </Screen>
   );
 }
 
-/** Maps deal status → Pill tone + human label. */
-function StatusPill({ status }: { status: string }) {
-  const map: Record<string, { label: string; tone: 'safe' | 'caution' | 'alert' | 'info' | 'neutral' }> = {
-    awaiting_funds: { label: 'Awaiting Funds', tone: 'caution' },
-    funded: { label: 'Funded', tone: 'safe' },
-    in_progress: { label: 'In Progress', tone: 'info' },
-    delivered: { label: 'Delivered', tone: 'caution' },
-    disputed: { label: 'Disputed', tone: 'alert' },
-    settled: { label: 'Settled', tone: 'safe' },
-    refunded: { label: 'Refunded', tone: 'neutral' },
-  };
-  const { label, tone } = map[status] ?? { label: status, tone: 'neutral' as const };
-  return <Pill label={label} tone={tone} />;
+function QuickChip({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <TouchableOpacity activeOpacity={0.85} onPress={onPress} style={styles.quickChip}>
+      <Text style={styles.quickChipText}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
+
+function shortNaira(kobo: number) {
+  const naira = kobo / 100;
+  if (naira >= 1_000_000) return `₦${(naira / 1_000_000).toFixed(1)}M`;
+  if (naira >= 1_000) return `₦${Math.round(naira / 1_000)}K`;
+  return `₦${naira}`;
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  scroll: { paddingBottom: 110 },
+  collar: {
+    backgroundColor: colors.forest,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.md,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.lg,
+    gap: spacing.md,
   },
-  greeting: {
-    fontSize: typography.h3.size,
-    fontWeight: '700',
-    color: colors.cream,
-  },
-  sub: { fontSize: typography.caption.size, color: colors.stone, marginTop: 2 },
-  notifBtn: { padding: spacing.xs },
-  notifIcon: { fontSize: 22 },
-  pad: { paddingHorizontal: spacing.lg },
-
-  balanceCard: {
-    backgroundColor: colors.emerald,
-    marginBottom: spacing.lg,
-  },
-  balanceRow: {
+  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  identity: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  avatar: { width: 42, height: 42, borderRadius: 21, backgroundColor: colors.apricot, alignItems: 'center', justifyContent: 'center' },
+  avatarText: { color: colors.ink, fontWeight: '900' },
+  welcome: { color: colors.cream, fontSize: typography.body.size, fontWeight: '900' },
+  sub: { color: colors.lime, fontSize: typography.caption.size, fontWeight: '800', marginTop: 2 },
+  bell: { fontSize: 20 },
+  body: { padding: spacing.lg, gap: spacing.md },
+  primaryCta: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: spacing.md,
-  },
-  balanceLabel: {
-    fontSize: typography.caption.size,
-    fontWeight: '700',
-    color: 'rgba(255,255,255,0.7)',
-    letterSpacing: 0.8,
-    marginBottom: spacing.xs,
-  },
-  balanceAmount: {
-    fontSize: typography.display.size,
-    fontWeight: '800',
-    color: '#fff',
-    letterSpacing: -0.5,
-  },
-  vaultIcon: { fontSize: 28 },
-  availableRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.2)',
-    paddingTop: spacing.md,
+    justifyContent: 'center',
+    gap: spacing.sm,
+    minHeight: 54,
+    borderRadius: radii.md,
+    backgroundColor: colors.ink,
   },
-  availableLabel: {
-    fontSize: typography.bodySm.size,
-    color: 'rgba(255,255,255,0.8)',
-    fontWeight: '500',
-  },
-  availableAmount: {
-    fontSize: typography.body.size,
-    fontWeight: '700',
-    color: '#fff',
-  },
-  cta: { marginBottom: spacing.md },
-
-  sectionTitle: {
-    fontSize: typography.bodySm.size,
-    fontWeight: '700',
-    color: colors.stone,
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-    marginBottom: spacing.md,
-    marginTop: spacing.sm,
-  },
-  list: { paddingHorizontal: spacing.lg, gap: spacing.md, paddingBottom: 100 },
-  dealCard: {},
-  dealRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  dealInfo: { flex: 1, marginRight: spacing.md },
-  dealTitle: {
-    fontSize: typography.body.size,
-    fontWeight: '600',
-    color: colors.cream,
-    marginBottom: spacing.xs,
-  },
-  dealAmount: {
-    fontSize: typography.bodySm.size,
-    color: colors.stone,
-    fontWeight: '500',
-  },
-  empty: { paddingTop: spacing.xxl },
-  emptyText: {
-    fontSize: typography.body.size,
-    color: colors.stone,
-    textAlign: 'center',
-  },
+  plus: { width: 24, height: 24, borderRadius: 7, backgroundColor: colors.lime, alignItems: 'center', justifyContent: 'center' },
+  plusText: { color: colors.ink, fontWeight: '900', fontSize: 16 },
+  primaryCtaText: { color: colors.cream, fontSize: typography.body.size, fontWeight: '900' },
+  quickRow: { flexDirection: 'row', gap: spacing.sm },
+  quickChip: { flex: 1, minHeight: 42, borderRadius: radii.sm, borderWidth: 1, borderColor: colors.sand, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.xs },
+  quickChipText: { color: colors.charcoal, fontSize: typography.caption.size, fontWeight: '900' },
+  metricRow: { flexDirection: 'row', gap: spacing.sm },
+  sectionHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: spacing.sm },
+  stack: { gap: spacing.sm },
 });

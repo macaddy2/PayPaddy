@@ -59,11 +59,11 @@ export default function NewListingScreen() {
 
   return (
     <Screen bg={colors.ink} padH scroll>
-      <BackHeader title="New Listing" />
+      <BackHeader title="New Payment Link" />
       <View style={styles.body}>
         <Controller control={control} name="title" render={({ field: { onChange, value } }) => (
           <TextInput style={[styles.input, errors.title && styles.err]} value={value} onChangeText={onChange}
-            placeholder="Listing title" placeholderTextColor={colors.stone} autoFocus />
+            placeholder="What are you selling?" placeholderTextColor={colors.stone} autoFocus />
         )} />
         {errors.title && <Text style={styles.errText}>{errors.title.message}</Text>}
 

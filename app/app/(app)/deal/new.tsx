@@ -16,7 +16,7 @@ import { z } from 'zod';
 import { BackHeader, Button, Screen } from '@/ui';
 import { useAuth, useDeals } from '@/state';
 import { DEAL_CATEGORIES, type DealCategoryKey } from '@/domain/constants';
-import { nairaToKobo, formatNaira } from '@/domain/money';
+import { nairaToKobo } from '@/domain/money';
 import { colors, radii, spacing, typography } from '@/theme';
 import { track } from '@/services/analytics';
 

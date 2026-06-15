@@ -32,6 +32,7 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen name="index" options={{ title: 'Home', tabBarIcon: () => null }} />
+      <Tabs.Screen name="commerce" options={{ title: 'Integrate', tabBarIcon: () => null }} />
       <Tabs.Screen name="deals" options={{ title: 'Deals', tabBarIcon: () => null }} />
       <Tabs.Screen name="agents" options={{ title: 'Agents', tabBarIcon: () => null }} />
       <Tabs.Screen name="settings" options={{ title: 'Me', tabBarIcon: () => null }} />

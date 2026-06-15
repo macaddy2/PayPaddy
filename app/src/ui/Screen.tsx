@@ -7,7 +7,7 @@
  */
 
 import React from 'react';
-import { ScrollView, StyleSheet, View, type ViewStyle } from 'react-native';
+import { Platform, ScrollView, StyleSheet, View, type ViewStyle } from 'react-native';
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
 import { colors, spacing } from '@/theme';
@@ -49,22 +49,30 @@ export function Screen({
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: bg }]} edges={edges}>
       {scroll ? (
-        <ScrollView
-          contentContainerStyle={[styles.inner, padH && styles.padH, style]}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          {children}
-        </ScrollView>
+        <View style={styles.webShell}>
+          <ScrollView
+            contentContainerStyle={[styles.scrollInner, padH && styles.padH, style]}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            {children}
+          </ScrollView>
+        </View>
       ) : (
-        inner
+        <View style={styles.webShell}>{inner}</View>
       )}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1 },
+  root: { flex: 1, alignItems: 'center' },
+  webShell: {
+    flex: 1,
+    width: '100%',
+    maxWidth: Platform.OS === 'web' ? 430 : undefined,
+  },
   inner: { flex: 1 },
+  scrollInner: { flexGrow: 1 },
   padH: { paddingHorizontal: spacing.lg },
 });

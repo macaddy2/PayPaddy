@@ -90,6 +90,10 @@ const styles = StyleSheet.create({
   ghost: { backgroundColor: 'transparent' },
 
   // --- variant label colours ---
+  label: {
+    fontFamily: typography.family,
+    textAlign: 'center',
+  },
   primaryLabel: {
     color: colors.ink,
     fontSize: typography.body.size,

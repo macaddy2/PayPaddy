@@ -6,6 +6,7 @@
  */
 
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -111,8 +112,6 @@ export default function PayoutScreen() {
     </Screen>
   );
 }
-
-import { useState } from 'react';
 
 const styles = StyleSheet.create({
   body: { paddingTop: spacing.lg, gap: spacing.md },

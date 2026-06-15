@@ -26,6 +26,7 @@ export default function ReceiptScreen() {
     : 'Now';
 
   async function handleShare() {
+    if (!deal) return;
     await Share.share({
       message:
         `PayPaddy Receipt — ${deal.title}\n` +

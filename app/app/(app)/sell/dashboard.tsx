@@ -74,23 +74,23 @@ export default function SellerDashboard() {
               <View style={styles.trustRow}>
                 <TrustBadge score={seller.trustScore} verified />
                 <Text style={styles.trustDetail}>
-                  {seller.listingsCount} listing{seller.listingsCount !== 1 ? 's' : ''}
+                  {seller.listingsCount} link{seller.listingsCount !== 1 ? 's' : ''}
                 </Text>
               </View>
             </View>
 
             {/* Listings header */}
             <View style={styles.listHeader}>
-              <Text style={styles.listTitle}>My Listings</Text>
+              <Text style={styles.listTitle}>My Payment Links</Text>
               <TouchableOpacity onPress={() => router.push('/(app)/sell/listing/new')}>
-                <Text style={styles.addLink}>+ New listing</Text>
+                <Text style={styles.addLink}>+ New link</Text>
               </TouchableOpacity>
             </View>
           </>
         }
         ListEmptyComponent={
           <View style={styles.pad}>
-            <Text style={styles.emptyText}>No listings yet. Create your first one!</Text>
+            <Text style={styles.emptyText}>No payment links yet. Create your first one!</Text>
           </View>
         }
         renderItem={({ item }) => (

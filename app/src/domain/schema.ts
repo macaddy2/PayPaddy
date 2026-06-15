@@ -185,12 +185,67 @@ export const Listing = z.object({
   description: z.string(),
   priceKobo: kobo,
   category: DealCategory,
+  city: z.string().default('Lagos'),
+  imageEmoji: z.string().default('📦'),
+  status: z.enum(['draft', 'published', 'paused']).default('published'),
   /** Required if category === 'commerce' AND listing declares an IMEI. */
   imei: z.string().optional(),
   imeiVerified: z.boolean().optional(),
   createdAt: iso,
 });
 export type Listing = z.infer<typeof Listing>;
+
+export const IntegrationPartner = z.object({
+  id: z.string(),
+  name: z.string(),
+  kind: z.enum(['individual', 'storefront', 'platform', 'plugin']),
+  city: z.string(),
+  tier: Tier,
+  trustScore: z.number().min(0).max(100),
+  collateralKobo: kobo,
+  trinityVerified: z.boolean(),
+  successfulDeals: z.number().int().nonnegative(),
+  disputeRatePct: z.number().nonnegative(),
+  integrationMode: z.enum(['payment_link', 'hosted_checkout', 'api', 'plugin']),
+  externalBaseUrl: z.string().url().optional(),
+  apiKeyLabel: z.string().optional(),
+});
+export type IntegrationPartner = z.infer<typeof IntegrationPartner>;
+
+export const CommerceIntentStatus = z.enum(['ready', 'deal_created', 'expired']);
+export type CommerceIntentStatus = z.infer<typeof CommerceIntentStatus>;
+
+export const CommerceIntent = z.object({
+  id: z.string(),
+  source: z.enum(['individual_link', 'platform_checkout', 'invoice', 'plugin_demo']),
+  externalRef: z.string(),
+  partnerId: z.string(),
+  sellerId: z.string(),
+  title: z.string().min(3),
+  description: z.string(),
+  amountKobo: kobo,
+  category: DealCategory,
+  city: z.string(),
+  imageEmoji: z.string().default('📦'),
+  status: CommerceIntentStatus.default('ready'),
+  returnUrl: z.string().url().optional(),
+  createdAt: iso,
+  expiresAt: iso.optional(),
+});
+export type CommerceIntent = z.infer<typeof CommerceIntent>;
+
+export const CommerceIntentDetail = CommerceIntent.extend({
+  partner: IntegrationPartner,
+});
+export type CommerceIntentDetail = z.infer<typeof CommerceIntentDetail>;
+
+export const CommerceIntentFilters = z.object({
+  query: z.string().optional(),
+  category: DealCategory.optional(),
+  partnerId: z.string().optional(),
+  mode: z.enum(['payment_link', 'hosted_checkout', 'api', 'plugin']).optional(),
+});
+export type CommerceIntentFilters = z.infer<typeof CommerceIntentFilters>;
 
 // -------------------------
 // Agent
