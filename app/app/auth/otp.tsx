@@ -77,8 +77,10 @@ export default function OtpScreen() {
     }
   }
 
-  // Dev-only hint so manual testers don't need to dig into logs.
-  const devHint = __DEV__ && requestId ? api.auth.peekOtp(requestId) : null;
+  // Mock-build helper: surface the deterministic OTP code so anyone
+  // demoing the live web build can complete the login flow without
+  // having to dig into the mock backend.
+  const mockHint = requestId ? api.auth.peekOtp(requestId) : null;
 
   return (
     <Screen bg={colors.ink} padH>
@@ -109,9 +111,9 @@ export default function OtpScreen() {
           ))}
         </View>
 
-        {/* Dev hint */}
-        {devHint && (
-          <Text style={styles.devHint}>[DEV] Mock code: {devHint}</Text>
+        {/* Mock hint */}
+        {mockHint && (
+          <Text style={styles.devHint}>Demo code: {mockHint}</Text>
         )}
 
         <Button
