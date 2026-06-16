@@ -6,7 +6,7 @@
 
 import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { BackHeader, Button, Screen, StepBar } from '@/ui';
 import { useAuth } from '@/state';
@@ -42,10 +42,21 @@ export default function NinScreen() {
     const final = nin ?? digits.join('');
     if (final.length < NIN_LEN) return;
     track('trinity.nin_attempted');
-    const status = await verifyNin(final);
-    if (status === 'verified') {
-      track('trinity.nin_verified');
-      router.push('/auth/trinity/liveness');
+    try {
+      const status = await verifyNin(final);
+      if (status === 'verified') {
+        track('trinity.nin_verified');
+        router.push('/auth/trinity/liveness');
+      }
+    } catch {
+      // Most likely the demo session was lost (e.g. page refresh on this
+      // route). Send the user back to the start so they can sign in again
+      // rather than leaving the button silently doing nothing.
+      Alert.alert(
+        'Session expired',
+        'Please sign in again to continue.',
+        [{ text: 'OK', onPress: () => router.replace('/welcome') }],
+      );
     }
   }
 
