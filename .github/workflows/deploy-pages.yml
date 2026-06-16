@@ -44,15 +44,11 @@ jobs:
 
       - name: Export Expo web app
         run: npx expo export --platform web
-        env:
-          EXPO_BASE_URL: /PayPaddy
 
       - name: Prepare GitHub Pages artifact
         shell: bash
         run: |
           set -euo pipefail
-          perl -0pi -e 's#<body>#<body><script>window.process=window.process||{};window.process.env=Object.assign({},window.process.env,{EXPO_BASE_URL:"/PayPaddy"});</script># unless /EXPO_BASE_URL:"\/PayPaddy"/' dist/index.html
-          perl -0pi -e 's/src="\/_expo\//src="\/PayPaddy\/_expo\//g' dist/index.html
           cp dist/index.html dist/404.html
           touch dist/.nojekyll
 
