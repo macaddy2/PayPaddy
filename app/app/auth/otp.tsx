@@ -113,7 +113,9 @@ export default function OtpScreen() {
 
         {/* Mock hint */}
         {mockHint && (
-          <Text style={styles.devHint}>Demo code: {mockHint}</Text>
+          <Text style={styles.devHint}>
+            Demo mode: any 6 digits work (e.g. {mockHint})
+          </Text>
         )}
 
         <Button

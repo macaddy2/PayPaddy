@@ -1,16 +1,25 @@
 /**
  * Screen — the root wrapper every screen renders inside.
  *
- * Handles SafeAreaView, background color, and the optional scroll variant.
- * Screens should not import SafeAreaView directly; use this instead so we
- * have one place to tweak global screen padding.
+ * Handles SafeAreaView, background color, the optional scroll variant, and
+ * the responsive web shell. On mobile the column is full-bleed; on a wide
+ * web viewport the column is capped at a phone-ish width, centred on a dim
+ * stage with rounded corners — so the deployed site looks intentional
+ * instead of a stretched mobile screen.
  */
 
 import React from 'react';
-import { Platform, ScrollView, StyleSheet, View, type ViewStyle } from 'react-native';
+import {
+  Platform,
+  ScrollView,
+  StyleSheet,
+  View,
+  useWindowDimensions,
+  type ViewStyle,
+} from 'react-native';
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
-import { colors, spacing } from '@/theme';
+import { colors, radii, spacing } from '@/theme';
 
 type ScreenProps = {
   children: React.ReactNode;
@@ -25,6 +34,10 @@ type ScreenProps = {
   style?: ViewStyle;
 };
 
+const WEB_COLUMN_MAX = 480;
+const WEB_FRAME_BREAKPOINT = 600;
+const STAGE_BG = '#050D0B';
+
 export function Screen({
   children,
   bg = colors.ink,
@@ -33,12 +46,19 @@ export function Screen({
   edges = ['top', 'bottom'],
   style,
 }: ScreenProps) {
+  const { width } = useWindowDimensions();
+  const isWebFrame = Platform.OS === 'web' && width >= WEB_FRAME_BREAKPOINT;
+
+  // On a wide web viewport the outer SafeArea becomes the "stage" behind
+  // the centred column; on mobile (or narrow web) the stage matches the
+  // screen bg so there is no visible chrome.
+  const stageBg = isWebFrame ? STAGE_BG : bg;
+
   const inner = (
     <View
       style={[
         styles.inner,
         padH && styles.padH,
-        { backgroundColor: bg },
         style,
       ]}
     >
@@ -47,9 +67,15 @@ export function Screen({
   );
 
   return (
-    <SafeAreaView style={[styles.root, { backgroundColor: bg }]} edges={edges}>
-      {scroll ? (
-        <View style={styles.webShell}>
+    <SafeAreaView style={[styles.root, { backgroundColor: stageBg }]} edges={edges}>
+      <View
+        style={[
+          styles.column,
+          { backgroundColor: bg },
+          isWebFrame && styles.columnFramed,
+        ]}
+      >
+        {scroll ? (
           <ScrollView
             contentContainerStyle={[styles.scrollInner, padH && styles.padH, style]}
             showsVerticalScrollIndicator={false}
@@ -57,20 +83,32 @@ export function Screen({
           >
             {children}
           </ScrollView>
-        </View>
-      ) : (
-        <View style={styles.webShell}>{inner}</View>
-      )}
+        ) : (
+          inner
+        )}
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1, alignItems: 'center' },
-  webShell: {
+  column: {
     flex: 1,
     width: '100%',
-    maxWidth: Platform.OS === 'web' ? 430 : undefined,
+    maxWidth: Platform.OS === 'web' ? WEB_COLUMN_MAX : undefined,
+  },
+  columnFramed: {
+    borderRadius: radii.lg,
+    marginVertical: spacing.xl,
+    overflow: 'hidden',
+    // Lift the column off the stage. RN-web converts shadow* props into a
+    // CSS box-shadow; on native this branch is never reached (isWebFrame
+    // requires Platform.OS === 'web').
+    shadowColor: '#000',
+    shadowOpacity: 0.45,
+    shadowRadius: 60,
+    shadowOffset: { width: 0, height: 20 },
   },
   inner: { flex: 1 },
   scrollInner: { flexGrow: 1 },
