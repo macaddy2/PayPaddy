@@ -109,12 +109,15 @@ export const auth = {
   /**
    * Step 2. Verifies the code; on success either returns an existing user or
    * creates a skeleton user (Trinity fields `pending`) and "signs them in".
+   *
+   * Mock build: any 6-digit code is accepted. The deterministic `000000`
+   * surfaced via `peekOtp` is still a hint, not a gate.
    */
   async verifyOtp(requestId: string, code: string): Promise<{ user: User }> {
     await sleep(SLA_MS.otpVerify);
     const pending = pendingOtps[requestId];
     if (!pending) throw new Error('OTP expired or unknown');
-    if (pending.code !== code) throw new Error('OTP incorrect');
+    if (!/^\d{6}$/.test(code)) throw new Error('OTP must be 6 digits');
     delete pendingOtps[requestId];
 
     // Look up existing user by phone or create a new one.
