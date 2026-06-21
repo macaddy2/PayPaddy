@@ -130,8 +130,70 @@ export const Deal = z.object({
   /** When funded → auto-release fires at this time unless buyer disputes. */
   autoReleaseAt: iso.optional(),
   timeline: z.array(DealTimelineEvent),
+  /** Optional milestone breakdown for multi-stage deals; undefined → single-payout. */
+  milestones: z.array(z.lazy(() => Milestone)).optional(),
+  /** Hash-chained provenance log; undefined for legacy single-payout deals. */
+  ledger: z.array(z.lazy(() => LedgerEntry)).optional(),
 });
 export type Deal = z.infer<typeof Deal>;
+
+// -------------------------
+// Milestones + Ledger ("off-chain smart contract" — see services/ledger.ts)
+// -------------------------
+
+export const MilestoneStatus = z.enum([
+  'pending', // not yet started
+  'in_progress', // seller working
+  'delivered', // seller marked done; awaiting buyer release (or auto-release)
+  'released', // funds credited to seller wallet
+  'disputed',
+]);
+export type MilestoneStatus = z.infer<typeof MilestoneStatus>;
+
+export const Milestone = z.object({
+  id: z.string().min(1),
+  title: z.string().min(2).max(80),
+  description: z.string().max(280).optional(),
+  /** Share of deal.grossKobo in basis points. Milestones in a deal sum to 10_000. */
+  shareBps: z.number().int().min(1).max(10_000),
+  status: MilestoneStatus,
+  deliveredAt: iso.optional(),
+  releasedAt: iso.optional(),
+  /** Net amount actually credited on release (post-fees). */
+  releasedKobo: kobo.optional(),
+  /** Auto-release deadline once delivered. */
+  autoReleaseAt: iso.optional(),
+});
+export type Milestone = z.infer<typeof Milestone>;
+
+export const LedgerEntryKind = z.enum([
+  'deal_created',
+  'deal_funded',
+  'milestone_started',
+  'milestone_delivered',
+  'milestone_released',
+  'milestone_disputed',
+  'deal_settled',
+]);
+export type LedgerEntryKind = z.infer<typeof LedgerEntryKind>;
+
+export const LedgerEntry = z.object({
+  /** Sequence within the deal, starting at 0. */
+  index: z.number().int().min(0),
+  at: iso,
+  kind: LedgerEntryKind,
+  actor: z.enum(['system', 'buyer', 'seller', 'admin']),
+  /** Milestone this entry pertains to, if applicable. */
+  milestoneId: z.string().optional(),
+  /** Kobo moved by this entry (0 for non-payout events). */
+  amountKobo: kobo,
+  note: z.string().optional(),
+  /** Hash of this entry's payload + prevHash. */
+  hash: z.string(),
+  /** Hash of the previous entry; 'genesis' for index 0. */
+  prevHash: z.string(),
+});
+export type LedgerEntry = z.infer<typeof LedgerEntry>;
 
 // -------------------------
 // Dispute
