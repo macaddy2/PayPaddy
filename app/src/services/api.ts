@@ -22,7 +22,7 @@ import {
   TIERS,
   type TierKey,
 } from '@/domain/constants';
-import { computeFees, computeSlash } from '@/domain/money';
+import { computeFees, computeMilestonePayout, computeSlash } from '@/domain/money';
 import {
   Agent,
   CashInCode,
@@ -42,8 +42,10 @@ import type {
   DealCategory,
   DisputeReason,
   DisputeVerdict,
+  Milestone,
   TrinityStatus,
 } from '@/domain/schema';
+import { appendEntry } from './ledger';
 import { logger } from './logger';
 import {
   agents as agentsStore,
@@ -73,6 +75,18 @@ function nid(prefix: string): string {
 
 function nowIso(): string {
   return new Date().toISOString();
+}
+
+/**
+ * `setTimeout` returns a `NodeJS.Timeout` under Jest (which has `.unref()` to
+ * tell Node a pending timer should not block process exit) but an opaque
+ * number on web / React Native. This helper lets us call `.unref()` safely
+ * in both environments — important so long-fuse mock triggers (e.g. the 24h
+ * milestone auto-release) don't keep the test runner alive.
+ */
+function unrefTimer(handle: unknown): void {
+  const maybe = handle as { unref?: () => void };
+  if (typeof maybe?.unref === 'function') maybe.unref();
 }
 
 // -------------------------
@@ -228,10 +242,26 @@ export const deals = {
     title: string;
     grossKobo: number;
     category: DealCategory;
+    /** Optional milestone breakdown. Shares must be in basis points and sum to 10_000. */
+    milestones?: { title: string; description?: string; shareBps: number }[];
   }): Promise<Deal> {
     await sleep(SLA_MS.generic);
     const sellerId = input.sellerId ?? 'user_tunde';
     const sellerTier: TierKey = sellersStore[sellerId]?.tier ?? 'silver';
+    let milestones: Milestone[] | undefined;
+    if (input.milestones && input.milestones.length > 0) {
+      const totalBps = input.milestones.reduce((sum, m) => sum + m.shareBps, 0);
+      if (totalBps !== 10_000) {
+        throw new Error(`Milestone shares must sum to 10000 bps, got ${totalBps}`);
+      }
+      milestones = input.milestones.map((m) => ({
+        id: nid('mstone'),
+        title: m.title,
+        description: m.description,
+        shareBps: m.shareBps,
+        status: 'pending',
+      }));
+    }
     const deal: Deal = {
       id: nid('deal'),
       title: input.title,
@@ -243,8 +273,13 @@ export const deals = {
       status: 'awaiting_funds',
       createdAt: nowIso(),
       timeline: [{ at: nowIso(), kind: 'created', actor: 'buyer' }],
+      milestones,
+      ledger: milestones ? [] : undefined,
     };
     dealsStore[deal.id] = deal;
+    if (milestones) {
+      appendEntry(deal, 'deal_created', 'buyer', { at: deal.createdAt });
+    }
     return Deal.parse(deal);
   },
 
@@ -267,7 +302,7 @@ export const deals = {
       expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
     };
     // Simulate the webhook-driven transition after the settlement delay.
-    setTimeout(() => {
+    unrefTimer(setTimeout(() => {
       const latest = dealsStore[dealId];
       if (latest && latest.status === 'awaiting_funds') {
         latest.status = 'funded';
@@ -275,8 +310,11 @@ export const deals = {
         latest.autoReleaseAt = undefined; // set only after delivery+confirm
         latest.timeline.push({ at: nowIso(), kind: 'funded', actor: 'system' });
         latest.timeline.push({ at: nowIso(), kind: 'seller_notified', actor: 'system' });
+        if (latest.milestones) {
+          appendEntry(latest, 'deal_funded', 'system', { amountKobo: latest.grossKobo });
+        }
       }
-    }, SLA_MS.paymentSettle);
+    }, SLA_MS.paymentSettle));
     return VirtualAccount.parse(va);
   },
 
@@ -314,6 +352,85 @@ export const deals = {
     d.confirmedAt = nowIso();
     d.timeline.push({ at: nowIso(), kind: 'confirmed', actor: 'buyer' });
     d.timeline.push({ at: nowIso(), kind: 'settled', actor: 'system' });
+    return Deal.parse(d);
+  },
+
+  /**
+   * Seller marks a milestone delivered. Writes a `milestone_delivered` ledger
+   * entry, arms the auto-release timer for that milestone, and schedules the
+   * smart-contract trigger that releases funds if the buyer takes no action
+   * within `DEAL_TIMERS_MS.autoReleaseWindow`.
+   */
+  async markMilestoneDelivered(dealId: string, milestoneId: string): Promise<Deal> {
+    await sleep(SLA_MS.generic);
+    const d = dealsStore[dealId];
+    if (!d) throw new Error('Deal not found');
+    if (!d.milestones) throw new Error('Deal has no milestones');
+    if (d.status !== 'funded' && d.status !== 'in_progress') {
+      throw new Error(`Cannot deliver from deal status ${d.status}`);
+    }
+    const m = d.milestones.find((x) => x.id === milestoneId);
+    if (!m) throw new Error(`Milestone ${milestoneId} not found`);
+    if (m.status !== 'pending' && m.status !== 'in_progress') {
+      throw new Error(`Milestone is already ${m.status}`);
+    }
+    m.status = 'delivered';
+    m.deliveredAt = nowIso();
+    m.autoReleaseAt = new Date(Date.now() + DEAL_TIMERS_MS.autoReleaseWindow).toISOString();
+    if (d.status === 'funded') d.status = 'in_progress';
+    appendEntry(d, 'milestone_delivered', 'seller', { milestoneId, note: m.title });
+    // Smart-contract trigger: if still delivered at expiry, system releases.
+    unrefTimer(setTimeout(() => {
+      const latest = dealsStore[dealId];
+      const latestM = latest?.milestones?.find((x) => x.id === milestoneId);
+      if (latestM && latestM.status === 'delivered') {
+        void deals.releaseMilestone(dealId, milestoneId, 'system').catch(() => undefined);
+      }
+    }, DEAL_TIMERS_MS.autoReleaseWindow));
+    return Deal.parse(d);
+  },
+
+  /**
+   * Release a milestone's slice to the seller's wallet. Buyer-initiated by
+   * default; passing `actor: 'system'` is how the auto-release timer fires.
+   * When the last milestone releases, the deal flips to `settled`.
+   */
+  async releaseMilestone(
+    dealId: string,
+    milestoneId: string,
+    actor: 'buyer' | 'system' = 'buyer',
+  ): Promise<Deal> {
+    await sleep(SLA_MS.generic);
+    const d = dealsStore[dealId];
+    if (!d) throw new Error('Deal not found');
+    if (!d.milestones) throw new Error('Deal has no milestones');
+    const m = d.milestones.find((x) => x.id === milestoneId);
+    if (!m) throw new Error(`Milestone ${milestoneId} not found`);
+    if (m.status !== 'delivered') {
+      throw new Error(`Milestone must be delivered to release, was ${m.status}`);
+    }
+    const { fees } = computeMilestonePayout(d.grossKobo, m.shareBps, d.sellerTier);
+    const sellerWallet = walletsStore[d.sellerId];
+    if (sellerWallet) {
+      sellerWallet.availableKobo += fees.netToSellerKobo;
+    }
+    m.status = 'released';
+    m.releasedAt = nowIso();
+    m.releasedKobo = fees.netToSellerKobo;
+    m.autoReleaseAt = undefined;
+    appendEntry(d, 'milestone_released', actor, {
+      milestoneId,
+      amountKobo: fees.netToSellerKobo,
+      note: m.title,
+    });
+    // If every milestone has been released, settle the deal.
+    const allReleased = d.milestones.every((x) => x.status === 'released');
+    if (allReleased) {
+      d.status = 'settled';
+      d.confirmedAt = d.confirmedAt ?? nowIso();
+      d.timeline.push({ at: nowIso(), kind: 'settled', actor: 'system' });
+      appendEntry(d, 'deal_settled', 'system');
+    }
     return Deal.parse(d);
   },
 };
