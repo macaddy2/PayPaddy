@@ -28,6 +28,7 @@ type DealsState = {
     title: string;
     grossKobo: number;
     category: DealCategory;
+    milestones?: { title: string; description?: string; shareBps: number }[];
   }) => Promise<Deal>;
   createDealFromIntent: (input: { intentId: string; buyerId: string }) => Promise<Deal>;
   fundViaVirtualAccount: (dealId: string) => Promise<VirtualAccount>;
