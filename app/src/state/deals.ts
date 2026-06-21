@@ -9,7 +9,7 @@
 import { create } from 'zustand';
 
 import { api } from '@/services/api';
-import type { Deal, DealCategory, VirtualAccount } from '@/domain/schema';
+import type { AmendmentChanges, Deal, DealCategory, VirtualAccount } from '@/domain/schema';
 
 type DealsState = {
   byId: Record<string, Deal>;
@@ -26,15 +26,35 @@ type DealsState = {
     buyerId: string;
     sellerId?: string;
     title: string;
+    description?: string;
     grossKobo: number;
     category: DealCategory;
     milestones?: { title: string; description?: string; shareBps: number }[];
+    counterparty?: { role: 'buyer' | 'seller'; name?: string; phone?: string; email?: string };
+    fundingMode?: 'fund_first' | 'fund_after_lock';
   }) => Promise<Deal>;
   createDealFromIntent: (input: { intentId: string; buyerId: string }) => Promise<Deal>;
   fundViaVirtualAccount: (dealId: string) => Promise<VirtualAccount>;
   confirmReceipt: (dealId: string) => Promise<Deal>;
   markMilestoneDelivered: (dealId: string, milestoneId: string) => Promise<Deal>;
   releaseMilestone: (dealId: string, milestoneId: string) => Promise<Deal>;
+  // Two-party contract lifecycle
+  invite: (dealId: string) => Promise<{ deal: Deal; inviteUrl: string }>;
+  acceptInvite: (token: string, asUserId: string) => Promise<Deal>;
+  proposeAmendment: (input: {
+    dealId: string;
+    proposedBy: 'initiator' | 'counterparty';
+    changes: AmendmentChanges;
+    note?: string;
+  }) => Promise<Deal>;
+  respondToAmendment: (input: {
+    dealId: string;
+    amendmentId: string;
+    by: 'initiator' | 'counterparty';
+    response: 'accept' | 'reject';
+  }) => Promise<Deal>;
+  endorseLock: (input: { dealId: string; by: 'initiator' | 'counterparty' }) => Promise<Deal>;
+  signCompletion: (input: { dealId: string; by: 'initiator' | 'counterparty' }) => Promise<Deal>;
   clearError: () => void;
 };
 
@@ -131,6 +151,78 @@ export const useDeals = create<DealsState>((set) => ({
     set({ error: null });
     try {
       const deal = await api.deals.releaseMilestone(dealId, milestoneId);
+      set((s) => ({ byId: { ...s.byId, [deal.id]: deal } }));
+      return deal;
+    } catch (e) {
+      set({ error: (e as Error).message });
+      throw e;
+    }
+  },
+
+  async invite(dealId) {
+    set({ error: null });
+    try {
+      const result = await api.deals.invite({ dealId });
+      set((s) => ({ byId: { ...s.byId, [result.deal.id]: result.deal } }));
+      return result;
+    } catch (e) {
+      set({ error: (e as Error).message });
+      throw e;
+    }
+  },
+
+  async acceptInvite(token, asUserId) {
+    set({ error: null });
+    try {
+      const deal = await api.deals.acceptInvite(token, asUserId);
+      set((s) => ({ byId: { ...s.byId, [deal.id]: deal } }));
+      return deal;
+    } catch (e) {
+      set({ error: (e as Error).message });
+      throw e;
+    }
+  },
+
+  async proposeAmendment(input) {
+    set({ error: null });
+    try {
+      const deal = await api.deals.proposeAmendment(input);
+      set((s) => ({ byId: { ...s.byId, [deal.id]: deal } }));
+      return deal;
+    } catch (e) {
+      set({ error: (e as Error).message });
+      throw e;
+    }
+  },
+
+  async respondToAmendment(input) {
+    set({ error: null });
+    try {
+      const deal = await api.deals.respondToAmendment(input);
+      set((s) => ({ byId: { ...s.byId, [deal.id]: deal } }));
+      return deal;
+    } catch (e) {
+      set({ error: (e as Error).message });
+      throw e;
+    }
+  },
+
+  async endorseLock(input) {
+    set({ error: null });
+    try {
+      const deal = await api.deals.endorseLock(input);
+      set((s) => ({ byId: { ...s.byId, [deal.id]: deal } }));
+      return deal;
+    } catch (e) {
+      set({ error: (e as Error).message });
+      throw e;
+    }
+  },
+
+  async signCompletion(input) {
+    set({ error: null });
+    try {
+      const deal = await api.deals.signCompletion(input);
       set((s) => ({ byId: { ...s.byId, [deal.id]: deal } }));
       return deal;
     } catch (e) {

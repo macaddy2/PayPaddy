@@ -28,7 +28,7 @@ const CODE_LENGTH = 6;
 
 export default function OtpScreen() {
   const router = useRouter();
-  const { requestId, phone } = useLocalSearchParams<{ requestId: string; phone: string }>();
+  const { requestId, phone, next } = useLocalSearchParams<{ requestId: string; phone: string; next?: string }>();
   const { verifyOtp, loading } = useAuth();
 
   // Store each digit separately for the split-cell UI.
@@ -63,6 +63,13 @@ export default function OtpScreen() {
     if (!requestId) return;
     try {
       const user = await verifyOtp(requestId, finalCode);
+      // If the user came from an invite link (or any other deep link via
+      // `?next=`), honour it: the invite landing is public and reads as the
+      // signed-in user. Trinity can be completed later.
+      if (next) {
+        router.replace(next as never);
+        return;
+      }
       const { bvn, nin, liveness } = user.trinity;
       const trinityDone = bvn === 'verified' && nin === 'verified' && liveness === 'verified';
       if (trinityDone) {

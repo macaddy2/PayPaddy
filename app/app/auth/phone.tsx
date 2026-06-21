@@ -10,7 +10,7 @@
  *    in the UX research focus groups.
  */
 
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
 
@@ -21,6 +21,9 @@ import { track } from '@/services/analytics';
 
 export default function PhoneScreen() {
   const router = useRouter();
+  // `?next=<path>` is propagated through the OTP step so post-verify routing
+  // can return the user to wherever they came from (e.g. an invite link).
+  const { next } = useLocalSearchParams<{ next?: string }>();
   const { requestOtp, loading } = useAuth();
   const [local, setLocal] = useState(''); // digits after +234
 
@@ -40,7 +43,10 @@ export default function PhoneScreen() {
     track('auth.otp_requested', { method: 'phone' });
     try {
       const requestId = await requestOtp(normalised());
-      router.push({ pathname: '/auth/otp', params: { requestId, phone: normalised() } });
+      router.push({
+        pathname: '/auth/otp',
+        params: { requestId, phone: normalised(), ...(next ? { next } : {}) },
+      });
     } catch {
       Alert.alert('Error', 'Could not send OTP. Please try again.');
     }
