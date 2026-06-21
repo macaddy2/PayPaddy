@@ -58,10 +58,18 @@ function makeInitialMilestones(): MilestoneDraft[] {
 export default function NewDealScreen() {
   const router = useRouter();
   const user = useAuth((s) => s.user);
-  const { createDeal, listLoading } = useDeals();
+  const { createDeal, invite, listLoading } = useDeals();
   const [category, setCategory] = useState<DealCategoryKey>('commerce');
   const [milestonesEnabled, setMilestonesEnabled] = useState(false);
   const [milestones, setMilestones] = useState<MilestoneDraft[]>(makeInitialMilestones);
+
+  // Two-party contract fields. Off by default → solo / single-party legacy deals
+  // behave exactly as before.
+  const [cpEnabled, setCpEnabled] = useState(false);
+  const [cpRole, setCpRole] = useState<'buyer' | 'seller'>('seller'); // i.e. *they* are seller, *I* am buyer
+  const [cpName, setCpName] = useState('');
+  const [cpContact, setCpContact] = useState(''); // phone or email
+  const [fundingMode, setFundingMode] = useState<'fund_first' | 'fund_after_lock'>('fund_after_lock');
 
   const { control, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -110,11 +118,26 @@ export default function NewDealScreen() {
       );
       return;
     }
+    if (cpEnabled && !cpContact.trim()) {
+      Alert.alert('Counterparty needs a contact', 'Enter a phone number or email so we can send them the invite.');
+      return;
+    }
     track('deal.create_attempted', {
       category,
       milestonesCount: milestonesEnabled ? milestones.length : 0,
+      counterparty: cpEnabled,
     });
     try {
+      const counterparty = cpEnabled
+        ? {
+            role: cpRole,
+            name: cpName.trim() || undefined,
+            // Cheap split: contains '@' → email, otherwise phone.
+            ...(cpContact.includes('@')
+              ? { email: cpContact.trim() }
+              : { phone: cpContact.trim() }),
+          }
+        : undefined;
       const deal = await createDeal({
         buyerId: user.id,
         title: data.title,
@@ -123,9 +146,24 @@ export default function NewDealScreen() {
         milestones: milestonesEnabled
           ? milestones.map((m) => ({ title: m.title.trim(), shareBps: m.sharePct * 100 }))
           : undefined,
+        counterparty,
+        fundingMode: cpEnabled ? fundingMode : undefined,
       });
-      track('deal.created', { dealId: deal.id, category, milestones: deal.milestones?.length ?? 0 });
-      router.replace({ pathname: '/(app)/deal/[id]', params: { id: deal.id } });
+      track('deal.created', {
+        dealId: deal.id,
+        category,
+        milestones: deal.milestones?.length ?? 0,
+        counterparty: cpEnabled,
+        fundingMode: cpEnabled ? fundingMode : 'none',
+      });
+      if (cpEnabled) {
+        // Two-party deals materialise the invite token immediately so the
+        // initiator lands on the invite screen with a shareable link ready.
+        await invite(deal.id);
+        router.replace({ pathname: '/(app)/deal/[id]/invite', params: { id: deal.id } });
+      } else {
+        router.replace({ pathname: '/(app)/deal/[id]', params: { id: deal.id } });
+      }
     } catch (e) {
       Alert.alert('Error', (e as Error).message || 'Could not create deal. Please try again.');
     }
@@ -293,6 +331,120 @@ export default function NewDealScreen() {
           )}
         </View>
 
+        {/* Counterparty + funding mode card */}
+        <View style={styles.milestoneCard}>
+          <View style={styles.milestoneToggleRow}>
+            <View style={{ flex: 1, gap: 2 }}>
+              <Text style={styles.milestoneToggleLabel}>Invite a counterparty</Text>
+              <Text style={styles.milestoneToggleHint}>
+                Send them a link to review the terms, negotiate amendments, and lock the
+                contract together. Off → you handle this side solo.
+              </Text>
+            </View>
+            <Switch
+              value={cpEnabled}
+              onValueChange={setCpEnabled}
+              trackColor={{ true: colors.emerald, false: colors.sand }}
+              thumbColor={cpEnabled ? colors.lime : colors.cream}
+              accessibilityLabel="Toggle counterparty invite"
+            />
+          </View>
+
+          {cpEnabled && (
+            <View style={styles.milestoneEditor}>
+              {/* Role: am I the buyer or the seller? */}
+              <Text style={styles.milestoneSectionLabel}>I AM THE…</Text>
+              <View style={styles.roleRow}>
+                <Pressable
+                  onPress={() => setCpRole('seller')}
+                  style={({ pressed }) => [
+                    styles.rolePill,
+                    cpRole === 'seller' && styles.rolePillActive,
+                    pressed && styles.btnPressed,
+                  ]}
+                  accessibilityLabel="I am the buyer (counterparty is the seller)"
+                >
+                  <Text style={[styles.rolePillText, cpRole === 'seller' && styles.rolePillTextActive]}>
+                    Buyer
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => setCpRole('buyer')}
+                  style={({ pressed }) => [
+                    styles.rolePill,
+                    cpRole === 'buyer' && styles.rolePillActive,
+                    pressed && styles.btnPressed,
+                  ]}
+                  accessibilityLabel="I am the seller (counterparty is the buyer)"
+                >
+                  <Text style={[styles.rolePillText, cpRole === 'buyer' && styles.rolePillTextActive]}>
+                    Seller
+                  </Text>
+                </Pressable>
+              </View>
+
+              {/* Contact + name */}
+              <Text style={styles.milestoneSectionLabel}>COUNTERPARTY ({cpRole === 'seller' ? 'SELLER' : 'BUYER'})</Text>
+              <TextInput
+                style={styles.input}
+                value={cpName}
+                onChangeText={setCpName}
+                placeholder="Name (optional)"
+                placeholderTextColor={colors.stone}
+                maxLength={80}
+              />
+              <TextInput
+                style={styles.input}
+                value={cpContact}
+                onChangeText={setCpContact}
+                placeholder="Phone (+234…) or email"
+                placeholderTextColor={colors.stone}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                maxLength={120}
+              />
+
+              {/* Funding mode */}
+              <Text style={styles.milestoneSectionLabel}>ESCROW FUNDING</Text>
+              <View style={styles.roleRow}>
+                <Pressable
+                  onPress={() => setFundingMode('fund_after_lock')}
+                  style={({ pressed }) => [
+                    styles.fundCell,
+                    fundingMode === 'fund_after_lock' && styles.fundCellActive,
+                    pressed && styles.btnPressed,
+                  ]}
+                >
+                  <Text style={[styles.fundCellTitle, fundingMode === 'fund_after_lock' && styles.fundCellTitleActive]}>
+                    Fund after we agree
+                  </Text>
+                  <Text style={styles.fundCellHint}>Negotiate → both endorse → then fund.</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => setFundingMode('fund_first')}
+                  style={({ pressed }) => [
+                    styles.fundCell,
+                    fundingMode === 'fund_first' && styles.fundCellActive,
+                    pressed && styles.btnPressed,
+                  ]}
+                >
+                  <Text style={[styles.fundCellTitle, fundingMode === 'fund_first' && styles.fundCellTitleActive]}>
+                    Fund now (proof of funds)
+                  </Text>
+                  <Text style={styles.fundCellHint}>Money in escrow before invite goes out.</Text>
+                </Pressable>
+              </View>
+
+              <Text style={styles.milestoneFooter}>
+                After you create the deal, we'll generate a shareable invite link to send
+                to your counterparty. They can review the terms, suggest amendments, and
+                must endorse to lock the contract before any funds are released.
+              </Text>
+            </View>
+          )}
+        </View>
+
         {/* Escrow explainer */}
         <View style={styles.escrowNote}>
           <Text style={styles.escrowNoteText}>
@@ -431,6 +583,36 @@ const styles = StyleSheet.create({
   milestoneActionText: { color: colors.cream, fontWeight: '800', fontSize: typography.bodySm.size },
   milestoneFooter: { color: colors.stone, fontSize: typography.caption.size, lineHeight: 16, fontStyle: 'italic' },
   btnPressed: { opacity: 0.7 },
+  roleRow: { flexDirection: 'row', gap: spacing.sm },
+  rolePill: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+    borderRadius: radii.pill,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: colors.ink,
+  },
+  rolePillActive: { borderColor: colors.lime, backgroundColor: 'rgba(191,255,79,0.08)' },
+  rolePillText: { color: colors.stone, fontWeight: '800', fontSize: typography.bodySm.size },
+  rolePillTextActive: { color: colors.lime },
+  fundCell: {
+    flex: 1,
+    backgroundColor: colors.ink,
+    borderRadius: radii.sm,
+    padding: spacing.md,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.08)',
+    gap: 4,
+  },
+  fundCellActive: { borderColor: colors.lime },
+  fundCellTitle: {
+    color: colors.cream,
+    fontWeight: '800',
+    fontSize: typography.bodySm.size,
+  },
+  fundCellTitleActive: { color: colors.lime },
+  fundCellHint: { color: colors.stone, fontSize: typography.caption.size, lineHeight: 14 },
   escrowNote: {
     backgroundColor: colors.forest,
     borderRadius: 12,
