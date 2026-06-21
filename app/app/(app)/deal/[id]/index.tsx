@@ -1,12 +1,12 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { ActionBar, BackHeader, Eyebrow, MilestoneBar, Screen, TrustPill, VaultCard } from '@/ui';
-import { useDeal, useDeals } from '@/state';
-import { computeFees, formatNaira } from '@/domain/money';
+import { useAuth, useDeal, useDeals } from '@/state';
+import { computeFees, computeMilestonePayout, formatNaira } from '@/domain/money';
 import { colors, radii, spacing, typography } from '@/theme';
-import type { DealStatus } from '@/domain/schema';
+import type { Deal, DealStatus, LedgerEntry, Milestone } from '@/domain/schema';
 
 const STATUS_STAGE: Partial<Record<DealStatus, number>> = {
   awaiting_funds: 0,
@@ -24,8 +24,10 @@ export default function DealRoomScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const deal = useDeal(id ?? '');
-  const { loadOne, confirmReceipt } = useDeals();
+  const { loadOne, confirmReceipt, markMilestoneDelivered, releaseMilestone } = useDeals();
+  const user = useAuth((s) => s.user);
   const [confirming, setConfirming] = useState(false);
+  const [busyMilestone, setBusyMilestone] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -54,6 +56,27 @@ export default function DealRoomScreen() {
     await confirmReceipt(currentDeal.id);
     setConfirming(false);
     router.push({ pathname: '/(app)/deal/[id]/complete', params: { id: currentDeal.id } });
+  }
+
+  const viewerIsBuyer = !!user && user.id === currentDeal.buyerId;
+  const viewerIsSeller = !!user && user.id === currentDeal.sellerId;
+
+  async function handleDeliverMilestone(milestoneId: string) {
+    setBusyMilestone(milestoneId);
+    try {
+      await markMilestoneDelivered(currentDeal.id, milestoneId);
+    } finally {
+      setBusyMilestone(null);
+    }
+  }
+
+  async function handleReleaseMilestone(milestoneId: string) {
+    setBusyMilestone(milestoneId);
+    try {
+      await releaseMilestone(currentDeal.id, milestoneId);
+    } finally {
+      setBusyMilestone(null);
+    }
   }
 
   return (
@@ -91,6 +114,34 @@ export default function DealRoomScreen() {
               <Text style={[styles.feeValue, styles.safeValue]}>{formatNaira(fees.netToSellerKobo)}</Text>
             </View>
           </View>
+
+          {currentDeal.milestones && currentDeal.milestones.length > 0 && (
+            <View style={styles.section}>
+              <View style={styles.sectionHead}>
+                <Eyebrow>Milestones</Eyebrow>
+                <TrustPill
+                  label={`${currentDeal.milestones.filter((m) => m.status === 'released').length}/${currentDeal.milestones.length} released`}
+                  tone="safe"
+                />
+              </View>
+              {currentDeal.milestones.map((m) => (
+                <MilestoneRow
+                  key={m.id}
+                  milestone={m}
+                  deal={currentDeal}
+                  viewerIsBuyer={viewerIsBuyer}
+                  viewerIsSeller={viewerIsSeller}
+                  busy={busyMilestone === m.id}
+                  onDeliver={() => handleDeliverMilestone(m.id)}
+                  onRelease={() => handleReleaseMilestone(m.id)}
+                />
+              ))}
+            </View>
+          )}
+
+          {currentDeal.ledger && currentDeal.ledger.length > 0 && (
+            <LedgerSection entries={currentDeal.ledger} />
+          )}
 
           <View style={styles.sectionHead}>
             <Eyebrow>Activity</Eyebrow>
@@ -155,6 +206,126 @@ function Party({ initials, name, state, tone }: { initials: string; name: string
   );
 }
 
+const MILESTONE_STATUS_TONE: Record<Milestone['status'], 'safe' | 'alert' | 'neutral'> = {
+  pending: 'neutral',
+  in_progress: 'neutral',
+  delivered: 'safe',
+  released: 'safe',
+  disputed: 'alert',
+};
+
+function MilestoneRow({
+  milestone,
+  deal,
+  viewerIsBuyer,
+  viewerIsSeller,
+  busy,
+  onDeliver,
+  onRelease,
+}: {
+  milestone: Milestone;
+  deal: Deal;
+  viewerIsBuyer: boolean;
+  viewerIsSeller: boolean;
+  busy: boolean;
+  onDeliver: () => void;
+  onRelease: () => void;
+}) {
+  const sharePct = (milestone.shareBps / 100).toFixed(milestone.shareBps % 100 ? 1 : 0);
+  const { fees } = computeMilestonePayout(deal.grossKobo, milestone.shareBps, deal.sellerTier);
+
+  const canDeliver =
+    viewerIsSeller &&
+    (milestone.status === 'pending' || milestone.status === 'in_progress') &&
+    (deal.status === 'funded' || deal.status === 'in_progress');
+  const canRelease = viewerIsBuyer && milestone.status === 'delivered';
+
+  return (
+    <View style={styles.milestoneCard}>
+      <View style={styles.milestoneHead}>
+        <View style={styles.milestoneTitleBlock}>
+          <Text style={styles.milestoneTitle}>{milestone.title}</Text>
+          {milestone.description ? (
+            <Text style={styles.milestoneDesc}>{milestone.description}</Text>
+          ) : null}
+        </View>
+        <View style={styles.milestoneSharePill}>
+          <Text style={styles.milestoneShareText}>{sharePct}%</Text>
+        </View>
+      </View>
+
+      <View style={styles.milestoneMeta}>
+        <TrustPill
+          label={milestone.status.replace('_', ' ').toUpperCase()}
+          tone={MILESTONE_STATUS_TONE[milestone.status]}
+        />
+        <Text style={styles.milestoneNet}>
+          {milestone.status === 'released' && milestone.releasedKobo != null
+            ? `Paid ${formatNaira(milestone.releasedKobo)}`
+            : `Releases ${formatNaira(fees.netToSellerKobo)} to seller`}
+        </Text>
+      </View>
+
+      {canDeliver && (
+        <Pressable
+          accessibilityRole="button"
+          style={({ pressed }) => [styles.milestoneBtn, styles.milestoneBtnPrimary, pressed && styles.btnPressed]}
+          disabled={busy}
+          onPress={onDeliver}
+        >
+          <Text style={styles.milestoneBtnText}>{busy ? 'Submitting…' : 'Mark delivered'}</Text>
+        </Pressable>
+      )}
+      {canRelease && (
+        <Pressable
+          accessibilityRole="button"
+          style={({ pressed }) => [styles.milestoneBtn, styles.milestoneBtnRelease, pressed && styles.btnPressed]}
+          disabled={busy}
+          onPress={onRelease}
+        >
+          <Text style={[styles.milestoneBtnText, styles.milestoneBtnTextDark]}>
+            {busy ? 'Releasing…' : `Release ${formatNaira(fees.netToSellerKobo)}`}
+          </Text>
+        </Pressable>
+      )}
+      {milestone.status === 'delivered' && !canRelease && (
+        <Text style={styles.milestoneHint}>
+          Awaiting buyer release{milestone.autoReleaseAt ? ' · auto-releases after the window expires' : ''}.
+        </Text>
+      )}
+    </View>
+  );
+}
+
+function LedgerSection({ entries }: { entries: readonly LedgerEntry[] }) {
+  const [open, setOpen] = useState(true);
+  return (
+    <View style={styles.section}>
+      <Pressable onPress={() => setOpen((o) => !o)} style={styles.sectionHead}>
+        <Eyebrow>Ledger · provenance chain</Eyebrow>
+        <Text style={styles.ledgerToggle}>{open ? 'Hide' : 'Show'} ({entries.length})</Text>
+      </Pressable>
+      {open && (
+        <View style={styles.ledgerCard}>
+          {entries.map((e) => (
+            <View key={e.index} style={styles.ledgerRow}>
+              <Text style={styles.ledgerIndex}>#{String(e.index).padStart(2, '0')}</Text>
+              <View style={styles.ledgerBody}>
+                <Text style={styles.ledgerKind}>{e.kind.replace(/_/g, ' ')}</Text>
+                <Text style={styles.ledgerMeta}>
+                  {e.actor} · {new Date(e.at).toLocaleTimeString()}
+                  {e.amountKobo > 0 ? ` · ${formatNaira(e.amountKobo)}` : ''}
+                </Text>
+                <Text style={styles.ledgerHash}>hash {e.hash.slice(0, 12)}…</Text>
+              </View>
+            </View>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   scroll: { paddingBottom: 100 },
   header: { backgroundColor: colors.cream },
@@ -184,4 +355,29 @@ const styles = StyleSheet.create({
   sellerBubble: { backgroundColor: '#fff', borderRadius: radii.sm, borderWidth: 1, borderColor: colors.sand, padding: spacing.md },
   feedActor: { color: colors.emerald, fontSize: typography.caption.size, fontWeight: '900', textTransform: 'capitalize' },
   feedText: { color: colors.charcoal, fontSize: typography.bodySm.size, fontWeight: '700', marginTop: 2, textTransform: 'capitalize' },
+  section: { gap: spacing.sm },
+  milestoneCard: { backgroundColor: '#fff', borderRadius: radii.md, borderWidth: 1, borderColor: colors.sand, padding: spacing.md, gap: spacing.sm },
+  milestoneHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: spacing.md },
+  milestoneTitleBlock: { flex: 1, gap: 2 },
+  milestoneTitle: { color: colors.charcoal, fontWeight: '900', fontSize: typography.body.size },
+  milestoneDesc: { color: colors.stone, fontSize: typography.caption.size, fontWeight: '600' },
+  milestoneSharePill: { backgroundColor: colors.safeBg, borderRadius: radii.pill, paddingVertical: 4, paddingHorizontal: spacing.sm },
+  milestoneShareText: { color: colors.emerald, fontWeight: '900', fontSize: typography.caption.size },
+  milestoneMeta: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm },
+  milestoneNet: { color: colors.stone, fontSize: typography.caption.size, fontWeight: '700', textAlign: 'right', flexShrink: 1 },
+  milestoneBtn: { borderRadius: radii.sm, paddingVertical: spacing.sm, alignItems: 'center', marginTop: 4 },
+  milestoneBtnPrimary: { backgroundColor: colors.forest },
+  milestoneBtnRelease: { backgroundColor: colors.lime },
+  milestoneBtnText: { color: colors.cream, fontWeight: '900', fontSize: typography.bodySm.size },
+  milestoneBtnTextDark: { color: colors.ink },
+  btnPressed: { opacity: 0.85 },
+  milestoneHint: { color: colors.stone, fontSize: typography.caption.size, fontStyle: 'italic', marginTop: 2 },
+  ledgerToggle: { color: colors.emerald, fontWeight: '800', fontSize: typography.caption.size },
+  ledgerCard: { backgroundColor: '#fff', borderRadius: radii.md, borderWidth: 1, borderColor: colors.sand, paddingVertical: spacing.sm },
+  ledgerRow: { flexDirection: 'row', gap: spacing.sm, paddingVertical: spacing.sm, paddingHorizontal: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.sand },
+  ledgerIndex: { color: colors.stone, fontFamily: typography.monoFamily, fontWeight: '900', fontSize: typography.caption.size, width: 28 },
+  ledgerBody: { flex: 1, gap: 2 },
+  ledgerKind: { color: colors.charcoal, fontWeight: '900', fontSize: typography.bodySm.size, textTransform: 'capitalize' },
+  ledgerMeta: { color: colors.stone, fontSize: typography.caption.size, fontWeight: '600' },
+  ledgerHash: { color: colors.emerald, fontFamily: typography.monoFamily, fontSize: 10, fontWeight: '700' },
 });

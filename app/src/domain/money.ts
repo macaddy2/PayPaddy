@@ -76,6 +76,28 @@ export function computeFees(grossKobo: number, tier: TierKey): FeeBreakdown {
 }
 
 /**
+ * Slice a deal by a milestone share, then run the seller-tier escrow fee
+ * over the slice. Same rounding invariant as `computeFees`: components of
+ * `fees` sum exactly to `sliceKobo`, so paying out across all milestones
+ * never over- or under-credits vs. paying out the deal in one shot.
+ */
+export function computeMilestonePayout(
+  grossKobo: number,
+  shareBps: number,
+  tier: TierKey,
+): { sliceKobo: number; fees: FeeBreakdown } {
+  if (!Number.isInteger(grossKobo) || grossKobo <= 0) {
+    throw new Error(`computeMilestonePayout expects a positive integer kobo amount, got ${grossKobo}`);
+  }
+  if (!Number.isInteger(shareBps) || shareBps <= 0 || shareBps > 10_000) {
+    throw new Error(`computeMilestonePayout expects shareBps in 1..10000, got ${shareBps}`);
+  }
+  const sliceKobo = Math.round((grossKobo * shareBps) / 10_000);
+  const fees = computeFees(sliceKobo, tier);
+  return { sliceKobo, fees };
+}
+
+/**
  * Apply a fraud slash to a seller's collateral. Returns the amount slashed
  * (which funds the buyer refund) and the collateral remaining.
  */

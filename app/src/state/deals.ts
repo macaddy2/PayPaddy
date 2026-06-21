@@ -32,6 +32,8 @@ type DealsState = {
   createDealFromIntent: (input: { intentId: string; buyerId: string }) => Promise<Deal>;
   fundViaVirtualAccount: (dealId: string) => Promise<VirtualAccount>;
   confirmReceipt: (dealId: string) => Promise<Deal>;
+  markMilestoneDelivered: (dealId: string, milestoneId: string) => Promise<Deal>;
+  releaseMilestone: (dealId: string, milestoneId: string) => Promise<Deal>;
   clearError: () => void;
 };
 
@@ -104,6 +106,30 @@ export const useDeals = create<DealsState>((set) => ({
     set({ error: null });
     try {
       const deal = await api.deals.confirmReceipt(dealId);
+      set((s) => ({ byId: { ...s.byId, [deal.id]: deal } }));
+      return deal;
+    } catch (e) {
+      set({ error: (e as Error).message });
+      throw e;
+    }
+  },
+
+  async markMilestoneDelivered(dealId, milestoneId) {
+    set({ error: null });
+    try {
+      const deal = await api.deals.markMilestoneDelivered(dealId, milestoneId);
+      set((s) => ({ byId: { ...s.byId, [deal.id]: deal } }));
+      return deal;
+    } catch (e) {
+      set({ error: (e as Error).message });
+      throw e;
+    }
+  },
+
+  async releaseMilestone(dealId, milestoneId) {
+    set({ error: null });
+    try {
+      const deal = await api.deals.releaseMilestone(dealId, milestoneId);
       set((s) => ({ byId: { ...s.byId, [deal.id]: deal } }));
       return deal;
     } catch (e) {

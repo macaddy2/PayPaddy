@@ -17,11 +17,13 @@ import type {
   Deal,
   IntegrationPartner,
   Listing,
+  Milestone,
   Seller,
   User,
   Wallet,
 } from '@/domain/schema';
 import { TIERS } from '@/domain/constants';
+import { appendEntry } from './ledger';
 
 // -------------------------
 // Primary seed records
@@ -139,6 +141,32 @@ export const deals: Record<string, Deal> = {
       { at: now(), kind: 'funded', actor: 'system' },
       { at: now(), kind: 'seller_notified', actor: 'system' },
     ],
+    // Three-stage milestone breakdown — demonstrates the ledger + auto-trigger
+    // payouts on the Deal Room. Shares (30/40/30) sum to 10_000 bps.
+    milestones: [
+      {
+        id: 'mstone_logo_concepts',
+        title: 'Concept sketches',
+        description: '3 directions delivered as PDF for buyer to choose',
+        shareBps: 3_000,
+        status: 'pending',
+      },
+      {
+        id: 'mstone_logo_revisions',
+        title: 'Two revision rounds',
+        description: 'Refinements on the chosen direction',
+        shareBps: 4_000,
+        status: 'pending',
+      },
+      {
+        id: 'mstone_logo_final',
+        title: 'Final files',
+        description: 'Vector + raster exports across required formats',
+        shareBps: 3_000,
+        status: 'pending',
+      },
+    ] satisfies Milestone[],
+    ledger: [],
   },
   'deal_arsenal': {
     id: 'deal_arsenal',
@@ -385,3 +413,19 @@ export function resetFixtures(): void {
 
 /** The "current user" in a signed-in mock session. Auth store sets this. */
 export const currentUserId: { value: string | null } = { value: null };
+
+// Seed the brand-logo deal's ledger so the Deal Room renders a live hash
+// chain on first open: deal_created → deal_funded already happened, and
+// the seller is partway through delivering the first milestone.
+{
+  const d = deals.deal_logo;
+  if (d) {
+    appendEntry(d, 'deal_created', 'buyer', { at: d.createdAt });
+    appendEntry(d, 'deal_funded', 'system', { amountKobo: d.grossKobo, at: d.fundedAt ?? d.createdAt });
+    appendEntry(d, 'milestone_started', 'seller', {
+      milestoneId: d.milestones?.[0]?.id,
+      note: d.milestones?.[0]?.title,
+    });
+    if (d.milestones?.[0]) d.milestones[0].status = 'in_progress';
+  }
+}
