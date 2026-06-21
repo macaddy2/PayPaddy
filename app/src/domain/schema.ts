@@ -85,13 +85,18 @@ export const DealCategory = z.enum(
 export type DealCategory = z.infer<typeof DealCategory>;
 
 export const DealStatus = z.enum([
-  'draft', // buyer creating but not yet funded
-  'awaiting_funds', // created, waiting on payment
+  'draft', // initiator drafting, no counterparty yet (or just attached, pre-invite)
+  'awaiting_counterparty', // invite issued; counterparty link not yet opened
+  'viewed', // counterparty opened the invite; no amendments yet
+  'negotiating', // at least one amendment outstanding
+  'locked', // both sides endorsed; terms frozen ("die is cast")
+  'awaiting_funds', // locked AND fund-after-lock path; waiting on virtual account
   'funded', // escrow is holding funds
-  'in_progress', // seller notified + working
-  'delivered', // seller marked delivered
-  'settled', // buyer confirmed, funds released
-  'disputed', // branch from funded/delivered
+  'in_progress', // seller notified + working (or first milestone delivered)
+  'delivered', // seller marked delivered (single-payout legacy path)
+  'awaiting_completion_signoff', // two-party post-execution; both must sign satisfaction
+  'settled', // funds released; deal complete
+  'disputed', // branch from any post-funded state
   'refunded', // dispute resolved in buyer's favour
 ]);
 export type DealStatus = z.infer<typeof DealStatus>;
@@ -118,9 +123,12 @@ export type DealTimelineEvent = z.infer<typeof DealTimelineEvent>;
 export const Deal = z.object({
   id: z.string().min(1),
   title: z.string().min(3).max(120),
+  description: z.string().max(1000).optional(),
   category: DealCategory,
   grossKobo: kobo,
+  /** Initiator-side ID; '' until counterparty accepts if initiator is the seller. */
   buyerId: z.string(),
+  /** Counterparty-side ID; '' until counterparty accepts if initiator is the buyer. */
   sellerId: z.string(),
   sellerTier: Tier,
   status: DealStatus,
@@ -134,6 +142,28 @@ export const Deal = z.object({
   milestones: z.array(z.lazy(() => Milestone)).optional(),
   /** Hash-chained provenance log; undefined for legacy single-payout deals. */
   ledger: z.array(z.lazy(() => LedgerEntry)).optional(),
+  // ── Two-party contract fields (all optional → legacy single-party deals unchanged) ──
+  /** Which side opened the deal. Set on creation when a counterparty is attached. */
+  initiatorRole: z.enum(['buyer', 'seller']).optional(),
+  /** The other party — captured BEFORE they register, so an invite can be issued first. */
+  counterparty: z.lazy(() => Counterparty).optional(),
+  /** Active invite link state. */
+  inviteToken: z.lazy(() => InviteToken).optional(),
+  /** Negotiation amendment history. */
+  amendments: z.array(z.lazy(() => Amendment)).optional(),
+  /** Endorsements that produced the locked state — both sides must sign on the same termsHash. */
+  endorsements: z.array(z.lazy(() => Endorsement)).optional(),
+  /** Set when both sides have endorsed and the contract is locked. */
+  lockedAt: iso.optional(),
+  /** When escrow is funded relative to lock. Default for two-party flows. */
+  fundingMode: z.enum(['fund_first', 'fund_after_lock']).optional(),
+  /** Bilateral completion sign-off; both required to settle a two-party deal. */
+  completionSignoff: z
+    .object({
+      initiatorAt: iso.optional(),
+      counterpartyAt: iso.optional(),
+    })
+    .optional(),
 });
 export type Deal = z.infer<typeof Deal>;
 
@@ -174,6 +204,14 @@ export const LedgerEntryKind = z.enum([
   'milestone_released',
   'milestone_disputed',
   'deal_settled',
+  // ── Two-party contract lifecycle ──
+  'invite_sent',
+  'invite_accepted',
+  'amendment_proposed',
+  'amendment_accepted',
+  'amendment_rejected',
+  'terms_locked',
+  'completion_signed',
 ]);
 export type LedgerEntryKind = z.infer<typeof LedgerEntryKind>;
 
@@ -194,6 +232,88 @@ export const LedgerEntry = z.object({
   prevHash: z.string(),
 });
 export type LedgerEntry = z.infer<typeof LedgerEntry>;
+
+// -------------------------
+// Two-party contract: counterparty, invite, amendments, endorsements
+// -------------------------
+
+/**
+ * The "other side" of a two-party deal. Captured at invite time, even before
+ * they're a registered PayPaddy user, so the link can be issued first.
+ */
+export const Counterparty = z.object({
+  /** Their role IN THIS DEAL (NOT necessarily their global User.role). */
+  role: z.enum(['buyer', 'seller']),
+  name: z.string().min(1).max(80).optional(),
+  phone: z.string().regex(/^\+?\d{10,14}$/).optional(),
+  email: z.string().email().optional(),
+  /** Resolved once they sign in and accept the invite. */
+  userId: z.string().optional(),
+});
+export type Counterparty = z.infer<typeof Counterparty>;
+
+export const InviteToken = z.object({
+  /** Opaque token, e.g. `inv_<8 hex>`. Carried in the share URL. */
+  token: z.string().min(8),
+  dealId: z.string(),
+  issuedAt: iso,
+  expiresAt: iso,
+  acceptedAt: iso.optional(),
+});
+export type InviteToken = z.infer<typeof InviteToken>;
+
+/**
+ * A negotiable JSON-patchish proposal on the current contract terms. Each
+ * amendment can revise any subset of the negotiable fields below; on
+ * mutual acceptance the changes are applied to the live deal.
+ */
+export const AmendmentChanges = z.object({
+  title: z.string().min(3).max(120).optional(),
+  description: z.string().max(1000).optional(),
+  grossKobo: kobo.optional(),
+  /**
+   * Re-propose the milestone breakdown as a whole. shareBps must sum to 10_000.
+   * Simpler than per-row diffs and matches how the create-deal form already builds them.
+   */
+  milestones: z
+    .array(
+      z.object({
+        title: z.string().min(2).max(80),
+        shareBps: z.number().int().min(1).max(10_000),
+        description: z.string().max(280).optional(),
+      }),
+    )
+    .optional(),
+});
+export type AmendmentChanges = z.infer<typeof AmendmentChanges>;
+
+export const Amendment = z.object({
+  id: z.string().min(1),
+  proposedBy: z.enum(['initiator', 'counterparty']),
+  proposedAt: iso,
+  note: z.string().max(280).optional(),
+  changes: AmendmentChanges,
+  status: z.enum(['proposed', 'accepted', 'rejected', 'superseded']),
+  /** Per-side responses; both must accept for the amendment to apply. */
+  initiatorResponse: z.enum(['pending', 'accept', 'reject']).default('pending'),
+  counterpartyResponse: z.enum(['pending', 'accept', 'reject']).default('pending'),
+  /** Set when the amendment leaves `proposed`. */
+  respondedAt: iso.optional(),
+});
+export type Amendment = z.infer<typeof Amendment>;
+
+export const Endorsement = z.object({
+  by: z.enum(['initiator', 'counterparty']),
+  at: iso,
+  /**
+   * Hash of the canonicalised terms snapshot at endorsement time. The lock
+   * is only valid when BOTH endorsements share the same termsHash — if
+   * anything changes between the two signatures, the first endorsement
+   * stops counting.
+   */
+  termsHash: z.string(),
+});
+export type Endorsement = z.infer<typeof Endorsement>;
 
 // -------------------------
 // Dispute

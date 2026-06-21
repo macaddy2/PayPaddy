@@ -13,9 +13,11 @@
 
 import type {
   Agent,
+  Amendment,
   CommerceIntent,
   Deal,
   IntegrationPartner,
+  InviteToken,
   Listing,
   Milestone,
   Seller,
@@ -197,6 +199,76 @@ export const deals: Record<string, Deal> = {
       { at: now(), kind: 'delivered', actor: 'seller' },
       { at: now(), kind: 'dispute_opened', actor: 'buyer', note: 'Wrong size and missing receipt.' },
     ],
+  },
+  // A two-party contract mid-negotiation: Ade (initiator/buyer) invited
+  // Tunde (counterparty/seller) for a 3-stage house-painting job. Tunde has
+  // accepted the invite, and proposed an amendment to shift the milestone
+  // shares (surface prep is heavier than scoped). The deal sits in
+  // `negotiating` — opens straight into the new negotiation board on first
+  // demo session.
+  'deal_house_painters': {
+    id: 'deal_house_painters',
+    title: 'House painting — 4-bedroom Lekki',
+    description: 'Interior + exterior, 3-stage delivery. Owner provides paint; painter provides labour, brushes, ladders.',
+    category: 'service',
+    grossKobo: 600_000_00,
+    buyerId: 'user_ade',
+    sellerId: 'user_tunde',
+    sellerTier: 'gold',
+    status: 'negotiating',
+    createdAt: now(),
+    timeline: [{ at: now(), kind: 'created', actor: 'buyer' }],
+    milestones: [
+      {
+        id: 'mstone_paint_prep',
+        title: 'Surface preparation',
+        description: 'Sand, fill cracks, prime',
+        shareBps: 2_000,
+        status: 'pending',
+      },
+      {
+        id: 'mstone_paint_interior',
+        title: 'Interior paint',
+        description: 'All 4 bedrooms + living + dining',
+        shareBps: 4_000,
+        status: 'pending',
+      },
+      {
+        id: 'mstone_paint_exterior',
+        title: 'Exterior paint + cleanup',
+        description: 'Outer walls + site clean-up',
+        shareBps: 4_000,
+        status: 'pending',
+      },
+    ] satisfies Milestone[],
+    ledger: [],
+    initiatorRole: 'buyer',
+    counterparty: {
+      role: 'seller',
+      name: 'Tunde Adebayo',
+      phone: '+2348023456789',
+      userId: 'user_tunde',
+    },
+    fundingMode: 'fund_after_lock',
+    amendments: [
+      {
+        id: 'amend_house_shares',
+        proposedBy: 'counterparty',
+        proposedAt: now(),
+        note: 'Prep work is heavier than scoped — old building, lots of crack-filling. Shifting 5% from exterior to prep.',
+        changes: {
+          milestones: [
+            { title: 'Surface preparation', shareBps: 2_500, description: 'Sand, fill cracks, prime' },
+            { title: 'Interior paint', shareBps: 4_000, description: 'All 4 bedrooms + living + dining' },
+            { title: 'Exterior paint + cleanup', shareBps: 3_500, description: 'Outer walls + site clean-up' },
+          ],
+        },
+        status: 'proposed',
+        initiatorResponse: 'pending',
+        counterpartyResponse: 'accept',
+      } satisfies Amendment,
+    ],
+    endorsements: [],
   },
 };
 
@@ -414,6 +486,12 @@ export function resetFixtures(): void {
 /** The "current user" in a signed-in mock session. Auth store sets this. */
 export const currentUserId: { value: string | null } = { value: null };
 
+/**
+ * Token → InviteToken lookup. Populated by `api.deals.invite`; demo-only,
+ * not persisted. A real backend would store this in a DB with TTL semantics.
+ */
+export const inviteTokens: Record<string, InviteToken> = {};
+
 // Seed the brand-logo deal's ledger so the Deal Room renders a live hash
 // chain on first open: deal_created → deal_funded already happened, and
 // the seller is partway through delivering the first milestone.
@@ -429,3 +507,30 @@ export const currentUserId: { value: string | null } = { value: null };
     if (d.milestones?.[0]) d.milestones[0].status = 'in_progress';
   }
 }
+
+// Seed the house-painters deal's ledger: deal_created → invite_sent →
+// invite_accepted → amendment_proposed. Live demo opens straight into the
+// negotiation board with an open amendment from the counterparty.
+{
+  const d = deals.deal_house_painters;
+  if (d) {
+    const inviteAt = new Date(Date.now() - 30 * 60 * 1000).toISOString(); // 30m ago
+    const acceptAt = new Date(Date.now() - 20 * 60 * 1000).toISOString(); // 20m ago
+    const amendAt = d.amendments?.[0]?.proposedAt ?? now();
+    appendEntry(d, 'deal_created', 'buyer', { at: d.createdAt, note: d.title });
+    appendEntry(d, 'invite_sent', 'system', { at: inviteAt, note: 'invite link issued to Tunde' });
+    appendEntry(d, 'invite_accepted', 'seller', { at: acceptAt, note: 'counterparty joined' });
+    appendEntry(d, 'amendment_proposed', 'seller', { at: amendAt, note: d.amendments?.[0]?.note ?? '' });
+    // Issue the invite token so the /invite/[token] route resolves it.
+    const inviteToken: InviteToken = {
+      token: 'inv_demohouse',
+      dealId: d.id,
+      issuedAt: inviteAt,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      acceptedAt: acceptAt,
+    };
+    inviteTokens[inviteToken.token] = inviteToken;
+    d.inviteToken = inviteToken;
+  }
+}
+
