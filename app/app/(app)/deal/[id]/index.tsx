@@ -1,19 +1,25 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { ActionBar, BackHeader, Eyebrow, MilestoneBar, Screen, TrustPill, VaultCard } from '@/ui';
+import { ActionBar, BackHeader, Button, Eyebrow, MilestoneBar, Screen, TrustPill, VaultCard } from '@/ui';
 import { useAuth, useDeal, useDeals } from '@/state';
 import { computeFees, computeMilestonePayout, formatNaira } from '@/domain/money';
 import { colors, radii, spacing, typography } from '@/theme';
 import type { Deal, DealStatus, LedgerEntry, Milestone } from '@/domain/schema';
 
 const STATUS_STAGE: Partial<Record<DealStatus, number>> = {
+  draft: 0,
+  awaiting_counterparty: 0,
+  viewed: 0,
+  negotiating: 0,
+  locked: 0,
   awaiting_funds: 0,
   funded: 1,
   in_progress: 2,
   delivered: 2,
   disputed: 2,
+  awaiting_completion_signoff: 2,
   settled: 3,
   refunded: 3,
 };
@@ -24,10 +30,20 @@ export default function DealRoomScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const deal = useDeal(id ?? '');
-  const { loadOne, confirmReceipt, markMilestoneDelivered, releaseMilestone } = useDeals();
+  const {
+    loadOne,
+    confirmReceipt,
+    markMilestoneDelivered,
+    releaseMilestone,
+    signCompletion,
+  } = useDeals();
   const user = useAuth((s) => s.user);
   const [confirming, setConfirming] = useState(false);
   const [busyMilestone, setBusyMilestone] = useState<string | null>(null);
+  const [signingCompletion, setSigningCompletion] = useState(false);
+  // DEMO-ONLY: lets a single tester drive both sides of a two-party flow
+  // within one session. In a real backend each party has their own device.
+  const [perspective, setPerspective] = useState<'auto' | 'initiator' | 'counterparty'>('auto');
 
   useEffect(() => {
     if (!id) return;
@@ -58,8 +74,25 @@ export default function DealRoomScreen() {
     router.push({ pathname: '/(app)/deal/[id]/complete', params: { id: currentDeal.id } });
   }
 
-  const viewerIsBuyer = !!user && user.id === currentDeal.buyerId;
-  const viewerIsSeller = !!user && user.id === currentDeal.sellerId;
+  // Effective viewer role. By default we trust the signed-in user's id; the
+  // demo perspective switch overrides this for the mock build.
+  const initiatorRole = currentDeal.initiatorRole ?? 'buyer';
+  const counterpartyRole = initiatorRole === 'buyer' ? 'seller' : 'buyer';
+  const effectiveSide: 'initiator' | 'counterparty' | 'spectator' =
+    perspective === 'auto'
+      ? (user && user.id === currentDeal.buyerId
+          ? (initiatorRole === 'buyer' ? 'initiator' : 'counterparty')
+          : user && user.id === currentDeal.sellerId
+          ? (initiatorRole === 'seller' ? 'initiator' : 'counterparty')
+          : 'spectator')
+      : perspective;
+  const effectiveRole: 'buyer' | 'seller' | null =
+    effectiveSide === 'initiator' ? initiatorRole
+      : effectiveSide === 'counterparty' ? counterpartyRole
+      : null;
+  const viewerIsBuyer = effectiveRole === 'buyer';
+  const viewerIsSeller = effectiveRole === 'seller';
+  const isTwoParty = !!currentDeal.counterparty;
 
   async function handleDeliverMilestone(milestoneId: string) {
     setBusyMilestone(milestoneId);
@@ -76,6 +109,21 @@ export default function DealRoomScreen() {
       await releaseMilestone(currentDeal.id, milestoneId);
     } finally {
       setBusyMilestone(null);
+    }
+  }
+
+  async function handleSignCompletion() {
+    if (effectiveSide === 'spectator') {
+      Alert.alert('Sign in as a party to this deal', 'Only the initiator or counterparty can sign completion.');
+      return;
+    }
+    setSigningCompletion(true);
+    try {
+      await signCompletion({ dealId: currentDeal.id, by: effectiveSide });
+    } catch (e) {
+      Alert.alert('Could not sign', (e as Error).message);
+    } finally {
+      setSigningCompletion(false);
     }
   }
 
@@ -114,6 +162,20 @@ export default function DealRoomScreen() {
               <Text style={[styles.feeValue, styles.safeValue]}>{formatNaira(fees.netToSellerKobo)}</Text>
             </View>
           </View>
+
+          {/* Two-party contract bar + demo perspective switch */}
+          {isTwoParty && (
+            <ContractBar
+              deal={currentDeal}
+              perspective={perspective}
+              effectiveSide={effectiveSide}
+              onPerspectiveChange={setPerspective}
+              onOpenInvite={() => router.push({ pathname: '/(app)/deal/[id]/invite', params: { id: currentDeal.id } })}
+              onOpenNegotiate={() => router.push({ pathname: '/(app)/deal/[id]/negotiate', params: { id: currentDeal.id } })}
+              onSignCompletion={handleSignCompletion}
+              signingCompletion={signingCompletion}
+            />
+          )}
 
           {currentDeal.milestones && currentDeal.milestones.length > 0 && (
             <View style={styles.section}>
@@ -325,6 +387,194 @@ function LedgerSection({ entries }: { entries: readonly LedgerEntry[] }) {
     </View>
   );
 }
+
+/**
+ * Two-party contract bar — gates the deal lifecycle ahead of the existing
+ * milestone/payment UI. Surfaces the right CTA per status, and exposes the
+ * demo perspective switch so a single tester can step through both sides.
+ */
+function ContractBar({
+  deal,
+  perspective,
+  effectiveSide,
+  onPerspectiveChange,
+  onOpenInvite,
+  onOpenNegotiate,
+  onSignCompletion,
+  signingCompletion,
+}: {
+  deal: Deal;
+  perspective: 'auto' | 'initiator' | 'counterparty';
+  effectiveSide: 'initiator' | 'counterparty' | 'spectator';
+  onPerspectiveChange: (p: 'auto' | 'initiator' | 'counterparty') => void;
+  onOpenInvite: () => void;
+  onOpenNegotiate: () => void;
+  onSignCompletion: () => void;
+  signingCompletion: boolean;
+}) {
+  const status = deal.status;
+  const cp = deal.counterparty!;
+  const cpName = cp.name ?? (cp.phone || cp.email || 'counterparty');
+  const initEndorsed = !!deal.endorsements?.find((e) => e.by === 'initiator');
+  const counterEndorsed = !!deal.endorsements?.find((e) => e.by === 'counterparty');
+  const signoff = deal.completionSignoff ?? {};
+
+  let title = '';
+  let body = '';
+  let primary: { label: string; onPress: () => void; loading?: boolean } | null = null;
+  let tone: 'safe' | 'caution' | 'neutral' = 'neutral';
+
+  if (status === 'draft') {
+    title = 'Draft contract';
+    body = `Send ${cpName} an invite to review and endorse the terms.`;
+    primary = { label: 'Send invite', onPress: onOpenInvite };
+    tone = 'caution';
+  } else if (status === 'awaiting_counterparty') {
+    title = 'Awaiting counterparty';
+    body = `Waiting for ${cpName} to open the invite link.`;
+    primary = { label: 'Resend / copy link', onPress: onOpenInvite };
+    tone = 'caution';
+  } else if (status === 'viewed') {
+    title = 'Counterparty joined';
+    body = openAmendmentsCount(deal) > 0
+      ? 'There are open amendments. Open the negotiation board to respond.'
+      : 'Both sides need to endorse the current terms to lock the contract.';
+    primary = { label: 'Open negotiation board', onPress: onOpenNegotiate };
+    tone = 'neutral';
+  } else if (status === 'negotiating') {
+    title = 'Negotiating terms';
+    body = `${openAmendmentsCount(deal)} open amendment${openAmendmentsCount(deal) === 1 ? '' : 's'}. Review and respond.`;
+    primary = { label: 'Open negotiation board', onPress: onOpenNegotiate };
+    tone = 'caution';
+  } else if (status === 'locked') {
+    title = '✓ Contract locked';
+    body = 'Both sides endorsed. Terms can only change via a joint amendment.';
+    tone = 'safe';
+  } else if (status === 'awaiting_completion_signoff') {
+    const mine =
+      effectiveSide === 'initiator' ? !!signoff.initiatorAt
+        : effectiveSide === 'counterparty' ? !!signoff.counterpartyAt : false;
+    title = mine ? 'Awaiting the other side' : 'Confirm satisfaction';
+    body = mine
+      ? 'You\'ve signed. The deal settles once both sides confirm satisfaction.'
+      : 'All milestones released. Sign off to settle the contract.';
+    if (!mine && effectiveSide !== 'spectator') {
+      primary = { label: signingCompletion ? 'Signing…' : '✓ Sign satisfaction', onPress: onSignCompletion, loading: signingCompletion };
+    }
+    tone = mine ? 'caution' : 'safe';
+  }
+
+  if (!title && status !== 'funded' && status !== 'in_progress' && status !== 'delivered' && status !== 'settled') {
+    return null;
+  }
+
+  return (
+    <View style={[barStyles.bar, tone === 'safe' && barStyles.barSafe, tone === 'caution' && barStyles.barCaution]}>
+      {/* Header row: contract title + perspective switch */}
+      <View style={barStyles.head}>
+        <View style={{ flex: 1 }}>
+          <Text style={barStyles.eyebrow}>TWO-PARTY CONTRACT</Text>
+          {title ? <Text style={barStyles.title}>{title}</Text> : null}
+        </View>
+        <View style={barStyles.perspectiveRow}>
+          {(['auto', 'initiator', 'counterparty'] as const).map((p) => (
+            <Pressable
+              key={p}
+              onPress={() => onPerspectiveChange(p)}
+              style={({ pressed }) => [
+                barStyles.perspectiveCell,
+                perspective === p && barStyles.perspectiveCellActive,
+                pressed && { opacity: 0.7 },
+              ]}
+            >
+              <Text style={[barStyles.perspectiveText, perspective === p && barStyles.perspectiveTextActive]}>
+                {p === 'auto' ? 'Auto' : p === 'initiator' ? 'Init.' : 'Cpty.'}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
+
+      {body ? <Text style={barStyles.body}>{body}</Text> : null}
+
+      {/* Endorsement chips on viewed/negotiating */}
+      {(status === 'viewed' || status === 'negotiating') && (
+        <View style={barStyles.chipRow}>
+          <ContractChip label="Initiator endorsed" set={initEndorsed} />
+          <ContractChip label="Counterparty endorsed" set={counterEndorsed} />
+        </View>
+      )}
+      {/* Sign-off chips during completion sign-off */}
+      {status === 'awaiting_completion_signoff' && (
+        <View style={barStyles.chipRow}>
+          <ContractChip label="Initiator signed" set={!!signoff.initiatorAt} />
+          <ContractChip label="Counterparty signed" set={!!signoff.counterpartyAt} />
+        </View>
+      )}
+
+      {primary && (
+        <Button label={primary.label} onPress={primary.onPress} loading={primary.loading} />
+      )}
+    </View>
+  );
+}
+
+function ContractChip({ label, set }: { label: string; set: boolean }) {
+  return (
+    <View style={[barStyles.chip, set ? barStyles.chipSet : barStyles.chipUnset]}>
+      <Text style={[barStyles.chipText, set ? barStyles.chipTextSet : barStyles.chipTextUnset]}>
+        {set ? '✓ ' : '· '}{label}
+      </Text>
+    </View>
+  );
+}
+
+function openAmendmentsCount(deal: Deal): number {
+  return (deal.amendments ?? []).filter((a) => a.status === 'proposed').length;
+}
+
+const barStyles = StyleSheet.create({
+  bar: {
+    backgroundColor: '#fff',
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.sand,
+    padding: spacing.md,
+    gap: spacing.sm,
+  },
+  barSafe: { borderColor: colors.emerald, backgroundColor: colors.safeBg },
+  barCaution: { borderColor: colors.caution, backgroundColor: colors.cautionBg },
+  head: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
+  eyebrow: {
+    fontSize: typography.caption.size,
+    fontWeight: '900',
+    color: colors.stone,
+    letterSpacing: 0.8,
+  },
+  title: { color: colors.charcoal, fontWeight: '900', fontSize: typography.body.size, marginTop: 2 },
+  body: { color: colors.charcoal, fontSize: typography.bodySm.size, fontWeight: '500', lineHeight: 18 },
+  perspectiveRow: {
+    flexDirection: 'row',
+    borderRadius: radii.pill,
+    backgroundColor: 'rgba(0,0,0,0.06)',
+    padding: 2,
+  },
+  perspectiveCell: {
+    paddingVertical: 4,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radii.pill,
+  },
+  perspectiveCellActive: { backgroundColor: colors.forest },
+  perspectiveText: { color: colors.charcoal, fontWeight: '800', fontSize: 10, letterSpacing: 0.3 },
+  perspectiveTextActive: { color: colors.cream },
+  chipRow: { flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' },
+  chip: { paddingHorizontal: spacing.sm, paddingVertical: 4, borderRadius: radii.pill },
+  chipSet: { backgroundColor: colors.safeBg },
+  chipUnset: { backgroundColor: 'rgba(0,0,0,0.04)' },
+  chipText: { fontSize: typography.caption.size, fontWeight: '800' },
+  chipTextSet: { color: colors.emerald },
+  chipTextUnset: { color: colors.stone },
+});
 
 const styles = StyleSheet.create({
   scroll: { paddingBottom: 100 },

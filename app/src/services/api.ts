@@ -22,7 +22,7 @@ import {
   TIERS,
   type TierKey,
 } from '@/domain/constants';
-import { computeFees, computeMilestonePayout, computeSlash } from '@/domain/money';
+import { canonicaliseTermsForHash, computeFees, computeMilestonePayout, computeSlash } from '@/domain/money';
 import {
   Agent,
   CashInCode,
@@ -38,14 +38,18 @@ import {
   Wallet,
 } from '@/domain/schema';
 import type {
+  Amendment,
+  AmendmentChanges,
   CommerceIntent,
+  Counterparty,
   DealCategory,
   DisputeReason,
   DisputeVerdict,
+  Endorsement,
   Milestone,
   TrinityStatus,
 } from '@/domain/schema';
-import { appendEntry } from './ledger';
+import { appendEntry, ledgerHash } from './ledger';
 import { logger } from './logger';
 import {
   agents as agentsStore,
@@ -53,6 +57,7 @@ import {
   currentUserId,
   deals as dealsStore,
   integrationPartners as integrationPartnersStore,
+  inviteTokens as inviteTokensStore,
   listings as listingsStore,
   sellers as sellersStore,
   users as usersStore,
@@ -232,22 +237,50 @@ export const deals = {
   },
 
   /**
-   * Create a deal in `awaiting_funds`. The `sellerId` is optional in the mock
-   * because some deal types (contracts, bets) are against a counterparty
-   * chosen later — defaulting to Tunde keeps the mock concrete.
+   * Create a deal. Two shapes:
+   *  - **Legacy single-party**: omit `counterparty`. Falls through to the
+   *    existing `awaiting_funds → funded → settled` lifecycle.
+   *  - **Two-party contract**: pass `counterparty` (the other side) and
+   *    optionally `fundingMode`. The deal is born in `draft` so the initiator
+   *    can either fund first (proof-of-funds) or invite first; downstream
+   *    methods (`invite`, `acceptInvite`, …) drive the lifecycle from there.
    */
   async create(input: {
     buyerId: string;
     sellerId?: string;
     title: string;
+    description?: string;
     grossKobo: number;
     category: DealCategory;
     /** Optional milestone breakdown. Shares must be in basis points and sum to 10_000. */
     milestones?: { title: string; description?: string; shareBps: number }[];
+    /** Two-party flag — the other side of the deal. Triggers the contract lifecycle. */
+    counterparty?: { role: 'buyer' | 'seller'; name?: string; phone?: string; email?: string };
+    /** Two-party only: when escrow is funded relative to the lock. Defaults to fund-after-lock. */
+    fundingMode?: 'fund_first' | 'fund_after_lock';
   }): Promise<Deal> {
     await sleep(SLA_MS.generic);
-    const sellerId = input.sellerId ?? 'user_tunde';
-    const sellerTier: TierKey = sellersStore[sellerId]?.tier ?? 'silver';
+    const isTwoParty = !!input.counterparty;
+    // For two-party deals, the side opposite the initiator is filled in on
+    // acceptInvite; for legacy deals, we keep the historic Tunde default.
+    let buyerId = input.buyerId;
+    let sellerId = input.sellerId ?? (isTwoParty ? '' : 'user_tunde');
+    let initiatorRole: 'buyer' | 'seller' | undefined;
+    let counterparty: Counterparty | undefined;
+    if (isTwoParty && input.counterparty) {
+      counterparty = { ...input.counterparty };
+      if (counterparty.role === 'seller') {
+        // Initiator is the buyer; counterparty (the seller) will accept the invite.
+        initiatorRole = 'buyer';
+        sellerId = '';
+      } else {
+        // Initiator is the seller; counterparty (the buyer) will accept.
+        initiatorRole = 'seller';
+        sellerId = input.buyerId;
+        buyerId = '';
+      }
+    }
+    const sellerTier: TierKey = sellerId && sellersStore[sellerId]?.tier ? sellersStore[sellerId]!.tier : 'silver';
     let milestones: Milestone[] | undefined;
     if (input.milestones && input.milestones.length > 0) {
       const totalBps = input.milestones.reduce((sum, m) => sum + m.shareBps, 0);
@@ -262,22 +295,29 @@ export const deals = {
         status: 'pending',
       }));
     }
+    const initialStatus: Deal['status'] = isTwoParty ? 'draft' : 'awaiting_funds';
     const deal: Deal = {
       id: nid('deal'),
       title: input.title,
+      description: input.description,
       category: input.category,
       grossKobo: input.grossKobo,
-      buyerId: input.buyerId,
+      buyerId,
       sellerId,
       sellerTier,
-      status: 'awaiting_funds',
+      status: initialStatus,
       createdAt: nowIso(),
       timeline: [{ at: nowIso(), kind: 'created', actor: 'buyer' }],
       milestones,
-      ledger: milestones ? [] : undefined,
+      ledger: milestones || isTwoParty ? [] : undefined,
+      initiatorRole,
+      counterparty,
+      fundingMode: isTwoParty ? input.fundingMode ?? 'fund_after_lock' : undefined,
+      amendments: isTwoParty ? [] : undefined,
+      endorsements: isTwoParty ? [] : undefined,
     };
     dealsStore[deal.id] = deal;
-    if (milestones) {
+    if (deal.ledger) {
       appendEntry(deal, 'deal_created', 'buyer', { at: deal.createdAt });
     }
     return Deal.parse(deal);
@@ -423,9 +463,287 @@ export const deals = {
       amountKobo: fees.netToSellerKobo,
       note: m.title,
     });
-    // If every milestone has been released, settle the deal.
+    // If every milestone has been released, either move to bilateral
+    // completion sign-off (two-party flow) or settle directly (legacy).
     const allReleased = d.milestones.every((x) => x.status === 'released');
     if (allReleased) {
+      if (d.counterparty) {
+        d.status = 'awaiting_completion_signoff';
+        d.completionSignoff = d.completionSignoff ?? {};
+        // No ledger entry here — `signCompletion` writes one per signature.
+      } else {
+        d.status = 'settled';
+        d.confirmedAt = d.confirmedAt ?? nowIso();
+        d.timeline.push({ at: nowIso(), kind: 'settled', actor: 'system' });
+        appendEntry(d, 'deal_settled', 'system');
+      }
+    }
+    return Deal.parse(d);
+  },
+
+  // -------------------------
+  // Two-party contract lifecycle
+  // -------------------------
+
+  /**
+   * Initiator sends the counterparty an invite link. Issues an opaque token
+   * and transitions the deal to `awaiting_counterparty`. Idempotent — calling
+   * twice reuses the existing token unless it has expired.
+   *
+   * Callable from `draft` (fund-after-lock path) OR `funded` (fund-first path —
+   * the initiator's money is already in escrow as proof-of-commitment).
+   */
+  async invite(input: {
+    dealId: string;
+  }): Promise<{ deal: Deal; inviteUrl: string }> {
+    await sleep(SLA_MS.generic);
+    const d = dealsStore[input.dealId];
+    if (!d) throw new Error('Deal not found');
+    if (!d.counterparty) throw new Error('Deal has no counterparty to invite');
+    if (d.status !== 'draft' && d.status !== 'funded' && d.status !== 'awaiting_counterparty') {
+      throw new Error(`Cannot invite from status ${d.status}`);
+    }
+    const existing = d.inviteToken;
+    const stillValid = existing && new Date(existing.expiresAt).getTime() > Date.now() && !existing.acceptedAt;
+    let token = existing;
+    if (!stillValid || !token) {
+      const newToken = {
+        token: `inv_${Math.random().toString(36).slice(2, 10)}`,
+        dealId: d.id,
+        issuedAt: nowIso(),
+        // 7-day window — generous for the demo; real backend would tune per partner.
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      };
+      inviteTokensStore[newToken.token] = newToken;
+      token = newToken;
+      d.inviteToken = newToken;
+      appendEntry(d, 'invite_sent', 'system', { note: 'invite link issued' });
+    }
+    if (d.status === 'draft' || d.status === 'funded') {
+      d.status = 'awaiting_counterparty';
+    }
+    // MOCK: a real backend would render a fully-qualified app URL here. In the
+    // demo we return a path; the UI appends the deployed origin (e.g. the
+    // GitHub Pages base) on the fly.
+    const inviteUrl = `/invite/${token.token}`;
+    return { deal: Deal.parse(d), inviteUrl };
+  },
+
+  /**
+   * Public token → dealId lookup. Used by the unauth-friendly invite landing
+   * page so a not-yet-signed-in counterparty can preview the contract terms
+   * before signing in. Returns the resolved deal alongside basic metadata.
+   *
+   * MOCK: in a real backend this would be a public read-only endpoint with a
+   * scoped projection (no user PII beyond what the initiator chose to share).
+   */
+  async lookupInviteToken(token: string): Promise<{ dealId: string; deal: Deal }> {
+    await sleep(SLA_MS.generic);
+    const tok = inviteTokensStore[token];
+    if (!tok) throw new Error('Invite link not found or expired');
+    if (new Date(tok.expiresAt).getTime() < Date.now()) {
+      throw new Error('Invite link has expired');
+    }
+    const d = dealsStore[tok.dealId];
+    if (!d) throw new Error('Invite link is no longer valid');
+    return { dealId: d.id, deal: Deal.parse(d) };
+  },
+
+  /**
+   * Counterparty (after signing in) accepts the invite. Resolves the
+   * counterparty.userId, fills in the previously-empty buyerId/sellerId,
+   * transitions the deal to `viewed`, and writes an `invite_accepted` ledger
+   * entry.
+   */
+  async acceptInvite(token: string, asUserId: string): Promise<Deal> {
+    await sleep(SLA_MS.generic);
+    const tok = inviteTokensStore[token];
+    if (!tok) throw new Error('Invite link not found or expired');
+    if (new Date(tok.expiresAt).getTime() < Date.now()) {
+      throw new Error('Invite link has expired');
+    }
+    const d = dealsStore[tok.dealId];
+    if (!d || !d.counterparty || !d.inviteToken) throw new Error('Invite link is no longer valid');
+    if (d.status !== 'awaiting_counterparty' && d.status !== 'viewed') {
+      throw new Error(`Cannot accept invite from status ${d.status}`);
+    }
+    // Don't let the initiator accept their own invite.
+    if ((d.counterparty.role === 'seller' && asUserId === d.buyerId) ||
+        (d.counterparty.role === 'buyer' && asUserId === d.sellerId)) {
+      throw new Error('Initiator cannot accept their own invite');
+    }
+    d.counterparty.userId = asUserId;
+    if (d.counterparty.role === 'seller') {
+      d.sellerId = asUserId;
+      d.sellerTier = sellersStore[asUserId]?.tier ?? 'silver';
+    } else {
+      d.buyerId = asUserId;
+    }
+    if (!walletsStore[asUserId]) {
+      walletsStore[asUserId] = { userId: asUserId, availableKobo: 0, pendingKobo: 0 };
+    }
+    tok.acceptedAt = nowIso();
+    d.inviteToken = tok;
+    d.status = 'viewed';
+    appendEntry(d, 'invite_accepted', d.counterparty.role, { note: 'counterparty joined' });
+    return Deal.parse(d);
+  },
+
+  /**
+   * Either side proposes an amendment to the contract terms. Adds it to
+   * `deal.amendments` in `proposed` status and flips the deal to `negotiating`.
+   */
+  async proposeAmendment(input: {
+    dealId: string;
+    proposedBy: 'initiator' | 'counterparty';
+    changes: AmendmentChanges;
+    note?: string;
+  }): Promise<Deal> {
+    await sleep(SLA_MS.generic);
+    const d = dealsStore[input.dealId];
+    if (!d || !d.counterparty) throw new Error('Two-party deal not found');
+    if (d.status !== 'viewed' && d.status !== 'negotiating') {
+      throw new Error(`Cannot propose amendment from status ${d.status}`);
+    }
+    if (input.changes.milestones) {
+      const total = input.changes.milestones.reduce((s, m) => s + m.shareBps, 0);
+      if (total !== 10_000) {
+        throw new Error(`Amendment milestone shares must sum to 10000 bps, got ${total}`);
+      }
+    }
+    // Any prior endorsements are invalidated whenever a new amendment opens —
+    // the termsHash they signed against may diverge from the new agreed terms.
+    d.endorsements = [];
+    const amendment: Amendment = {
+      id: nid('amend'),
+      proposedBy: input.proposedBy,
+      proposedAt: nowIso(),
+      note: input.note,
+      changes: input.changes,
+      status: 'proposed',
+      initiatorResponse: input.proposedBy === 'initiator' ? 'accept' : 'pending',
+      counterpartyResponse: input.proposedBy === 'counterparty' ? 'accept' : 'pending',
+    };
+    d.amendments = d.amendments ?? [];
+    d.amendments.push(amendment);
+    d.status = 'negotiating';
+    const actor: 'buyer' | 'seller' = mapSideToActor(d, input.proposedBy);
+    appendEntry(d, 'amendment_proposed', actor, { note: amendment.note ?? amendment.id });
+    return Deal.parse(d);
+  },
+
+  /**
+   * Record one side's response to an amendment. When both sides have accepted,
+   * the changes are applied to the live deal, any older still-proposed
+   * amendments are marked `superseded`, and if there are no more open
+   * amendments the deal returns to `viewed` (ready to endorse the lock).
+   */
+  async respondToAmendment(input: {
+    dealId: string;
+    amendmentId: string;
+    by: 'initiator' | 'counterparty';
+    response: 'accept' | 'reject';
+  }): Promise<Deal> {
+    await sleep(SLA_MS.generic);
+    const d = dealsStore[input.dealId];
+    if (!d || !d.counterparty) throw new Error('Two-party deal not found');
+    if (d.status !== 'negotiating') {
+      throw new Error(`Cannot respond to amendment from status ${d.status}`);
+    }
+    const a = d.amendments?.find((x) => x.id === input.amendmentId);
+    if (!a) throw new Error('Amendment not found');
+    if (a.status !== 'proposed') throw new Error(`Amendment already ${a.status}`);
+    if (input.by === 'initiator') a.initiatorResponse = input.response;
+    else a.counterpartyResponse = input.response;
+    const actor: 'buyer' | 'seller' = mapSideToActor(d, input.by);
+    appendEntry(d, input.response === 'accept' ? 'amendment_accepted' : 'amendment_rejected', actor, {
+      note: a.note ?? a.id,
+    });
+    // If either side rejects, the amendment is dead.
+    if (a.initiatorResponse === 'reject' || a.counterpartyResponse === 'reject') {
+      a.status = 'rejected';
+      a.respondedAt = nowIso();
+    } else if (a.initiatorResponse === 'accept' && a.counterpartyResponse === 'accept') {
+      // Both sides on board — apply the changes to the live deal.
+      a.status = 'accepted';
+      a.respondedAt = nowIso();
+      applyAmendment(d, a);
+      // Any older proposed amendments are now stale.
+      for (const other of d.amendments ?? []) {
+        if (other.id !== a.id && other.status === 'proposed') {
+          other.status = 'superseded';
+          other.respondedAt = nowIso();
+        }
+      }
+    }
+    // If no amendments are still proposed, the deal moves back to `viewed`.
+    const stillOpen = (d.amendments ?? []).some((x) => x.status === 'proposed');
+    if (!stillOpen) d.status = 'viewed';
+    return Deal.parse(d);
+  },
+
+  /**
+   * One side endorses the current terms. The Endorsement records the
+   * canonicalised termsHash at the moment of signing — if anything changes
+   * before the other side signs (e.g. a new amendment lands), this
+   * endorsement is invalidated (its termsHash no longer matches the live
+   * deal's hash) and the lock requires re-endorsement.
+   *
+   * When BOTH sides have endorsed on the same termsHash, the deal flips to
+   * `locked`. If `fundingMode === 'fund_after_lock'`, it then advances to
+   * `awaiting_funds`; if the initiator has already funded (`deal.fundedAt`
+   * set), it goes straight to `funded`.
+   */
+  async endorseLock(input: { dealId: string; by: 'initiator' | 'counterparty' }): Promise<Deal> {
+    await sleep(SLA_MS.generic);
+    const d = dealsStore[input.dealId];
+    if (!d || !d.counterparty) throw new Error('Two-party deal not found');
+    if (d.status !== 'viewed') {
+      throw new Error(`Cannot endorse from status ${d.status} — settle open amendments first`);
+    }
+    const termsHash = ledgerHash(canonicaliseTermsForHash(d));
+    d.endorsements = d.endorsements ?? [];
+    // Replace any existing endorsement by this side (re-endorse after an
+    // intervening amendment is the normal flow).
+    d.endorsements = d.endorsements.filter((e) => e.by !== input.by);
+    const e: Endorsement = { by: input.by, at: nowIso(), termsHash };
+    d.endorsements.push(e);
+    const actor: 'buyer' | 'seller' = mapSideToActor(d, input.by);
+    appendEntry(d, 'terms_locked', actor, { note: `endorsed by ${input.by}` });
+    // Lock fires only when both sides have endorsed AGAINST THE SAME termsHash.
+    const initEndorsed = d.endorsements.find((x) => x.by === 'initiator');
+    const counterEndorsed = d.endorsements.find((x) => x.by === 'counterparty');
+    if (initEndorsed && counterEndorsed && initEndorsed.termsHash === counterEndorsed.termsHash) {
+      d.lockedAt = nowIso();
+      // Path depends on whether funds are already in escrow.
+      if (d.fundedAt) {
+        d.status = 'funded';
+      } else {
+        d.status = 'awaiting_funds';
+      }
+    }
+    return Deal.parse(d);
+  },
+
+  /**
+   * Final bilateral satisfaction sign-off. Both sides must call this before
+   * a two-party deal moves to `settled`. The first call records the
+   * timestamp; the second call flips the status and writes the
+   * `deal_settled` ledger entry.
+   */
+  async signCompletion(input: { dealId: string; by: 'initiator' | 'counterparty' }): Promise<Deal> {
+    await sleep(SLA_MS.generic);
+    const d = dealsStore[input.dealId];
+    if (!d || !d.counterparty) throw new Error('Two-party deal not found');
+    if (d.status !== 'awaiting_completion_signoff') {
+      throw new Error(`Cannot sign completion from status ${d.status}`);
+    }
+    d.completionSignoff = d.completionSignoff ?? {};
+    if (input.by === 'initiator') d.completionSignoff.initiatorAt = nowIso();
+    else d.completionSignoff.counterpartyAt = nowIso();
+    const actor: 'buyer' | 'seller' = mapSideToActor(d, input.by);
+    appendEntry(d, 'completion_signed', actor, { note: `${input.by} signed satisfaction` });
+    if (d.completionSignoff.initiatorAt && d.completionSignoff.counterpartyAt) {
       d.status = 'settled';
       d.confirmedAt = d.confirmedAt ?? nowIso();
       d.timeline.push({ at: nowIso(), kind: 'settled', actor: 'system' });
@@ -434,6 +752,43 @@ export const deals = {
     return Deal.parse(d);
   },
 };
+
+// -------------------------
+// Internal helpers — two-party lifecycle
+// -------------------------
+
+/**
+ * Map an initiator/counterparty side onto the buyer/seller actor enum
+ * expected by the ledger. The deal's `initiatorRole` tells us which side
+ * the initiator is.
+ */
+function mapSideToActor(d: Deal, side: 'initiator' | 'counterparty'): 'buyer' | 'seller' {
+  const initiator = d.initiatorRole ?? 'buyer';
+  return side === 'initiator' ? initiator : (initiator === 'buyer' ? 'seller' : 'buyer');
+}
+
+/** Apply an accepted amendment's changes to the live deal in place. */
+function applyAmendment(d: Deal, a: Amendment): void {
+  const c = a.changes;
+  if (c.title !== undefined) d.title = c.title;
+  if (c.description !== undefined) d.description = c.description;
+  if (c.grossKobo !== undefined) d.grossKobo = c.grossKobo;
+  if (c.milestones && c.milestones.length > 0) {
+    // Re-materialise the milestone list. Pending milestones are wiped; if any
+    // were already in motion (delivered/released) the amendment shouldn't be
+    // proposable in the first place. Defensive: refuse to overwrite if so.
+    if (d.milestones?.some((m) => m.status !== 'pending')) {
+      throw new Error('Cannot rewrite milestones after any have started');
+    }
+    d.milestones = c.milestones.map((m) => ({
+      id: nid('mstone'),
+      title: m.title,
+      description: m.description,
+      shareBps: m.shareBps,
+      status: 'pending',
+    }));
+  }
+}
 
 // -------------------------
 // Wallet / Payout
