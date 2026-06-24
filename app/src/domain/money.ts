@@ -112,3 +112,41 @@ export function computeSlash(collateralKobo: number, tier: TierKey): {
   const slashedKobo = Math.round(collateralKobo * rate);
   return { slashedKobo, remainingKobo: collateralKobo - slashedKobo };
 }
+
+/**
+ * Produce a stable, order-independent string of the negotiable contract terms
+ * for a deal. Used as the input to `ledgerHash` when recording an Endorsement;
+ * two endorsements only lock the deal if they share the same termsHash, so any
+ * change between signatures invalidates the earlier one.
+ *
+ * Importing the Deal type via a structural shape avoids a circular dep with
+ * `schema.ts` (which depends on `money.ts` via constants).
+ */
+export function canonicaliseTermsForHash(deal: {
+  title: string;
+  description?: string;
+  grossKobo: number;
+  buyerId: string;
+  sellerId: string;
+  category: string;
+  milestones?: { id: string; title: string; shareBps: number; description?: string }[];
+  counterparty?: { role: 'buyer' | 'seller'; userId?: string };
+  fundingMode?: 'fund_first' | 'fund_after_lock';
+}): string {
+  const m = deal.milestones
+    ?.slice()
+    .sort((a, b) => a.id.localeCompare(b.id))
+    .map((x) => `${x.id}:${x.title}:${x.shareBps}:${x.description ?? ''}`)
+    .join('|');
+  return [
+    `t=${deal.title}`,
+    `d=${deal.description ?? ''}`,
+    `g=${deal.grossKobo}`,
+    `b=${deal.buyerId}`,
+    `s=${deal.sellerId}`,
+    `c=${deal.category}`,
+    `m=${m ?? ''}`,
+    `cp=${deal.counterparty?.role ?? ''}/${deal.counterparty?.userId ?? ''}`,
+    `fm=${deal.fundingMode ?? ''}`,
+  ].join('||');
+}

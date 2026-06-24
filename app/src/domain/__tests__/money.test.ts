@@ -11,7 +11,13 @@
  *   • computeSlash — slash percentages per tier, remainder invariant.
  */
 
-import { nairaToKobo, formatNaira, computeFees, computeSlash } from '../money';
+import {
+  canonicaliseTermsForHash,
+  computeFees,
+  computeSlash,
+  formatNaira,
+  nairaToKobo,
+} from '../money';
 
 // -------------------------
 // nairaToKobo
@@ -144,5 +150,77 @@ describe('computeSlash', () => {
 
   it('throws on negative collateral', () => {
     expect(() => computeSlash(-1, 'silver')).toThrow();
+  });
+});
+
+// -------------------------
+// canonicaliseTermsForHash
+// -------------------------
+
+describe('canonicaliseTermsForHash', () => {
+  const baseDeal = {
+    title: 'Office paint job',
+    grossKobo: 500_000_00,
+    buyerId: 'user_ade',
+    sellerId: 'user_tunde',
+    category: 'service',
+  } as const;
+
+  it('produces a stable, order-independent digest of the negotiable terms', () => {
+    const hash1 = canonicaliseTermsForHash(baseDeal);
+    const hash2 = canonicaliseTermsForHash(baseDeal);
+    expect(hash1).toBe(hash2);
+  });
+
+  it('absorbs every optional field — both populated and absent variants', () => {
+    // Bare deal — all optional fields missing — must still produce a string.
+    const bare = canonicaliseTermsForHash(baseDeal);
+    expect(typeof bare).toBe('string');
+    expect(bare.length).toBeGreaterThan(0);
+
+    // Each optional field flips the digest when populated.
+    const withDesc = canonicaliseTermsForHash({ ...baseDeal, description: 'two coats, white satin' });
+    const withMs = canonicaliseTermsForHash({
+      ...baseDeal,
+      milestones: [
+        { id: 'm_b', title: 'Stage two', shareBps: 5_000 },
+        { id: 'm_a', title: 'Stage one', shareBps: 5_000, description: 'prep' },
+      ],
+    });
+    const withMsNoDesc = canonicaliseTermsForHash({
+      ...baseDeal,
+      milestones: [{ id: 'm_a', title: 'Solo', shareBps: 10_000 }],
+    });
+    const withCpRoleOnly = canonicaliseTermsForHash({ ...baseDeal, counterparty: { role: 'seller' } });
+    const withCpFull = canonicaliseTermsForHash({
+      ...baseDeal,
+      counterparty: { role: 'buyer', userId: 'user_tolu' },
+    });
+    const withFundFirst = canonicaliseTermsForHash({ ...baseDeal, fundingMode: 'fund_first' });
+
+    expect(withDesc).not.toBe(bare);
+    expect(withMs).not.toBe(bare);
+    expect(withMsNoDesc).not.toBe(bare);
+    expect(withCpRoleOnly).not.toBe(bare);
+    expect(withCpFull).not.toBe(withCpRoleOnly);
+    expect(withFundFirst).not.toBe(bare);
+  });
+
+  it('milestone ordering is canonicalised — same set in any order hashes the same', () => {
+    const a = canonicaliseTermsForHash({
+      ...baseDeal,
+      milestones: [
+        { id: 'm_a', title: 'A', shareBps: 3_000 },
+        { id: 'm_b', title: 'B', shareBps: 7_000 },
+      ],
+    });
+    const b = canonicaliseTermsForHash({
+      ...baseDeal,
+      milestones: [
+        { id: 'm_b', title: 'B', shareBps: 7_000 },
+        { id: 'm_a', title: 'A', shareBps: 3_000 },
+      ],
+    });
+    expect(a).toBe(b);
   });
 });
