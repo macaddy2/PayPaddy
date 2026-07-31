@@ -84,6 +84,21 @@ body {
 }
 button { font-family: inherit; cursor: pointer; }
 textarea { font-family: inherit; }
+button:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid var(--pp-lime);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+}
 
 /* ============================================================
    PAGE HEADER
@@ -177,6 +192,7 @@ textarea { font-family: inherit; }
   inset: 0;
   overflow-y: auto;
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
   transition: opacity .35s ease;
   -ms-overflow-style: none;
@@ -185,7 +201,7 @@ textarea { font-family: inherit; }
   font-family: var(--pp-font-sans);
 }
 .screen::-webkit-scrollbar { display: none; }
-.screen.active { opacity: 1; pointer-events: auto; }
+.screen.active { opacity: 1; visibility: visible; pointer-events: auto; }
 
 /* ============================================================
    KEYBOARD HINT FOOTER
@@ -532,7 +548,7 @@ textarea { font-family: inherit; }
     </svg>
     <span class="page-hdr__wordmark">Pay<span>Paddy</span></span>
   </div>
-  <h1>Interactive prototype · click tabs or use arrow keys</h1>
+  <h1>Interactive prototype · illustrative data only · click tabs or use arrow keys</h1>
 </header>
 
 <!-- PHONE FRAME -->
@@ -567,9 +583,9 @@ textarea { font-family: inherit; }
           The trust layer for any deal — commerce, contracts, bets, services.
         </p>
         <div style="display:flex;gap:6px;justify-content:center;margin-bottom:22px;flex-wrap:wrap;">
-          <span class="pill-trust">✓ CBN Licensed</span>
-          <span class="pill-trust">✓ NDIC Insured</span>
-          <span class="pill-trust">✓ NDPR</span>
+          <span class="pill-trust">Escrow-first flow</span>
+          <span class="pill-trust">Human dispute path</span>
+          <span class="pill-trust">Prototype preview</span>
         </div>
         <div style="width:100%;max-width:220px;">
           <button class="btn-primary" onclick="setScreen(1)">Create Account</button>
@@ -594,7 +610,7 @@ textarea { font-family: inherit; }
       <div style="flex:1;display:flex;flex-direction:column;justify-content:center;position:relative;z-index:2;">
         <div id="ob-icon" style="width:72px;height:72px;background:var(--t-highlight);border-radius:18px;display:grid;place-items:center;font-size:32px;margin-bottom:28px;transform:rotate(-6deg);">🔒</div>
         <h2 id="ob-title" style="font-size:32px;font-weight:900;letter-spacing:-1px;line-height:1.1;margin-bottom:12px;">Lock your money</h2>
-        <p id="ob-body" style="font-size:14px;color:var(--pp-stone);line-height:1.55;max-width:260px;">Funds sit with a CBN-licensed bank until both sides agree.</p>
+        <p id="ob-body" style="font-size:14px;color:var(--pp-stone);line-height:1.55;max-width:260px;">Set clear terms, track milestones, and release funds only when both sides are satisfied.</p>
       </div>
       <button id="ob-btn" class="btn-primary" onclick="onboardNext()">Next</button>
     </section>
@@ -730,7 +746,7 @@ textarea { font-family: inherit; }
       </div>
       <!-- Reassurance -->
       <div style="background:rgba(0,168,107,.08);border:1px solid rgba(0,168,107,.2);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--pp-forest);line-height:1.5;">
-        🔒 All deals are escrow-protected with a CBN-licensed bank partner.
+        🔒 Prototype flow: partner, safeguarding, and regulatory details are subject to launch verification.
       </div>
       <!-- USSD shortcut chip -->
       <div onclick="setScreen(7)" style="margin-top:10px;background:rgba(255,255,255,.6);border:1px dashed var(--pp-sand);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--pp-stone);text-align:center;cursor:pointer;">
@@ -758,7 +774,7 @@ textarea { font-family: inherit; }
           <div class="vault__icon">🔒</div>
           <div class="vault__label">LOCKED IN ESCROW</div>
           <p class="vault__amount">₦1,250,000</p>
-          <div class="vault__bank">with GTBank (CBN Licensed)</div>
+          <div class="vault__bank">illustrative escrow balance</div>
         </div>
       </div>
 
@@ -833,7 +849,7 @@ textarea { font-family: inherit; }
         <p class="eyebrow" style="margin-bottom:8px;">Activity</p>
         <div style="background:rgba(0,168,107,.08);border-radius:8px;padding:8px 10px;font-size:11px;color:var(--pp-forest);margin-bottom:6px;">
           <div style="font-size:9px;color:var(--pp-stone);font-family:var(--pp-font-mono);margin-bottom:2px;">Apr 15 · 09:42</div>
-          ✓ Buyer initiated · funds locked at GTBank
+            ✓ Buyer initiated · illustrative funds held for the demo
         </div>
         <div style="background:rgba(0,168,107,.08);border-radius:8px;padding:8px 10px;font-size:11px;color:var(--pp-forest);margin-bottom:6px;">
           <div style="font-size:9px;color:var(--pp-stone);font-family:var(--pp-font-mono);margin-bottom:2px;">Apr 15 · 09:43</div>
@@ -904,7 +920,7 @@ textarea { font-family: inherit; }
           <div style="width:22px;height:30px;border-radius:4px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);"></div>
           <div style="width:22px;height:30px;border-radius:4px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);"></div>
         </div>
-        <p style="font-size:9px;color:var(--pp-stone);text-align:center;margin-top:10px;">🔒 Encrypted &amp; stored with NDPR-compliant partner</p>
+        <p style="font-size:9px;color:var(--pp-stone);text-align:center;margin-top:10px;">Prototype only — privacy and verification controls require launch approval</p>
       </div>
       <!-- Why 3 checks -->
       <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:12px;margin-bottom:14px;display:flex;gap:10px;">
@@ -1203,7 +1219,7 @@ textarea { font-family: inherit; }
           <div style="width:40px;height:40px;border-radius:10px;background:rgba(0,168,107,.13);display:grid;place-items:center;font-size:18px;">💸</div>
           <div style="flex:1;">
             <div style="font-size:13px;font-weight:700;">Next payout — Friday</div>
-            <div style="font-size:10px;color:var(--pp-stone);">To GTBank ····4829 · T+1 settlement</div>
+          <div style="font-size:10px;color:var(--pp-stone);">Illustrative settlement account · timing to be confirmed</div>
           </div>
           <div style="font-size:14px;font-weight:800;color:var(--pp-emerald);font-variant-numeric:tabular-nums;">₦2.2M</div>
         </div>
@@ -1267,7 +1283,7 @@ textarea { font-family: inherit; }
           <div style="width:36px;height:36px;border-radius:10px;background:rgba(0,168,107,.18);display:grid;place-items:center;font-size:18px;flex-shrink:0;">🛡</div>
           <div>
             <div style="font-size:12px;font-weight:800;color:var(--pp-forest);">SafeGuard covered</div>
-            <p style="font-size:10px;color:var(--pp-stone);margin-top:2px;line-height:1.5;">Up to ₦500K cover per incident. 95% of claims resolved within 48h. Funds locked at <strong>GTBank (CBN-licensed)</strong>.</p>
+          <p style="font-size:10px;color:var(--pp-stone);margin-top:2px;line-height:1.5;">Protection, safeguarding, and resolution terms are illustrative until launch partners and policies are confirmed.</p>
           </div>
         </div>
         <!-- Reviews preview -->
@@ -1331,7 +1347,7 @@ textarea { font-family: inherit; }
           <div style="font-size:20px;">🏦</div>
           <div style="flex:1;">
             <div style="font-size:13px;font-weight:800;">Bank Transfer</div>
-            <div style="font-size:10px;color:var(--pp-stone);">Instant via NIBSS · Free</div>
+          <div style="font-size:10px;color:var(--pp-stone);">Transfer method and fee terms to be confirmed</div>
           </div>
           <span style="font-size:9px;background:var(--pp-lime);color:var(--pp-ink);padding:2px 6px;border-radius:999px;font-weight:800;">FASTEST</span>
         </div>
@@ -1354,7 +1370,7 @@ textarea { font-family: inherit; }
         </div>
         <!-- Reassurance row -->
         <div style="background:rgba(0,168,107,.05);border:1px dashed rgba(0,168,107,.25);border-radius:10px;padding:10px 12px;font-size:11px;color:var(--pp-forest);line-height:1.55;">
-          <strong>How escrow works:</strong> we lock your money at <strong>GTBank</strong>, notify the seller to ship. You get 48h after delivery to inspect. Confirm — funds released. Dispute — funds stay frozen, human review within 24h.
+          <strong>How the prototype works:</strong> it illustrates a protected-payment journey. Final safeguarding, notification, inspection, release, and dispute rules will be confirmed before launch.
         </div>
       </div>
       <!-- Sticky CTA -->
@@ -1367,7 +1383,7 @@ textarea { font-family: inherit; }
         <div style="width:80px;height:80px;border-radius:24px;background:var(--pp-lime);display:grid;place-items:center;font-size:36px;transform:rotate(-6deg);margin-bottom:18px;animation:timerTick 1s ease-in-out infinite;">🔒</div>
         <div style="font-size:11px;color:var(--pp-stone);font-weight:800;letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px;">FUNDS LOCKED</div>
         <div style="font-size:24px;font-weight:900;color:var(--pp-cream);font-variant-numeric:tabular-nums;letter-spacing:-.5px;">₦1,293,750</div>
-        <div style="font-size:11px;color:var(--pp-lime);margin-top:6px;">at GTBank · CBN Licensed</div>
+          <div style="font-size:11px;color:var(--pp-lime);margin-top:6px;">illustrative partner flow</div>
         <div style="margin-top:20px;font-size:11px;color:var(--pp-stone);">Notifying seller… opening tracker</div>
       </div>
     </section>
@@ -1392,7 +1408,7 @@ textarea { font-family: inherit; }
             <div style="font-size:9px;font-weight:800;letter-spacing:.6px;color:rgba(255,255,255,.7);">LOCKED</div>
             <div style="font-size:16px;font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-.3px;">₦1,250,000</div>
           </div>
-          <div style="font-size:9px;color:var(--t-highlight);text-align:right;">GTBank<br>CBN ✓</div>
+          <div style="font-size:9px;color:var(--t-highlight);text-align:right;">Partner<br>pending</div>
         </div>
         <!-- 4-state timeline -->
         <p class="eyebrow" style="margin-bottom:10px;">Delivery progress</p>
@@ -1809,7 +1825,10 @@ const SCREENS = [
 // ============================================================
 // NAVIGATION STATE
 // ============================================================
-let currentScreen = parseInt(localStorage.getItem('pp-screen') || '0', 10);
+const savedScreen = Number.parseInt(localStorage.getItem('pp-screen') || '0', 10);
+let currentScreen = Number.isInteger(savedScreen) && savedScreen >= 0 && savedScreen < SCREENS.length
+  ? savedScreen
+  : 0;
 
 function setScreen(i) {
   currentScreen = Math.max(0, Math.min(SCREENS.length - 1, i));
@@ -1881,7 +1900,7 @@ function onScreenChange(key) {
 // ============================================================
 let onboardStep = 0;
 const ONBOARD_SLIDES = [
-  { icon: '🔒', title: 'Lock your money',       body: 'Funds sit with a CBN-licensed bank until both sides agree.' },
+  { icon: '🔒', title: 'Set clear terms',        body: 'Agree the deal, track the milestones, and release funds only when both sides are satisfied.' },
   { icon: '🤝', title: 'Any deal, any paddy',   body: 'Goods, services, contracts, wagers — one trust layer for all.' },
   { icon: '🛡️', title: 'Real humans resolve',   body: 'If things go sideways, a human mediator steps in within 24h.' },
 ];
@@ -2039,13 +2058,11 @@ function lockFunds() {
 // BOOT
 // ============================================================
 window.addEventListener('DOMContentLoaded', () => {
-  renderDemoDrawer();
-  renderScreens();
   renderOnboarding();
   renderDispute();
   renderRating();
   renderPayMethod();
-  onScreenChange(SCREENS[currentScreen].key);
+  setScreen(currentScreen);
   document.getElementById('demoToggle').onclick = toggleDrawer;
   document.getElementById('demoClose').onclick  = closeDrawer;
 });
