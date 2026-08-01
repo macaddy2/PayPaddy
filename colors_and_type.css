@@ -1,0 +1,147 @@
+/* ============================================
+   PAYPADDY DESIGN TOKENS
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap');
+
+:root {
+  /* ---- BRAND: forest + lime ---- */
+  --pp-ink:        #0A1F1A;  /* deepest — marketing hero, auth, vault interior */
+  --pp-forest:    #14453D;  /* secondary dark surface; gradient partner */
+  --pp-emerald:   #00A86B;  /* money / safe / done */
+  --pp-lime:      #BFFF4F;  /* CTA on dark, spark accents */
+
+  /* ---- ACCENT: warm human ---- */
+  --pp-apricot:   #FF9D6E;  /* in-progress, avatars, active step */
+  --pp-coral:     #FF6B4A;  /* urgent edge-bar, badges */
+
+  /* ---- NEUTRALS: paper + stone ---- */
+  --pp-cream:     #FAF7F2;  /* primary light surface */
+  --pp-sand:      #F0EBE1;  /* card borders, dividers, tiles */
+  --pp-stone:     #8B8680;  /* secondary text / labels */
+  --pp-charcoal:  #1C1C1C;  /* body text on cream */
+
+  /* ---- SEMANTIC ---- */
+  --pp-safe:      #00A86B;  /* = emerald */
+  --pp-caution:   #F5A623;  /* warnings, delays */
+  --pp-alert:     #E94B3C;  /* dispute hero, destructive */
+  --pp-info:      #3D7FFF;  /* neutral informational */
+
+  /* ---- GRADIENTS ---- */
+  --pp-gradient-ink:     linear-gradient(160deg, #0A1F1A 0%, #14453D 100%);
+  --pp-gradient-vault:   linear-gradient(135deg, #14453D 0%, #00A86B 100%);
+  --pp-gradient-hero:    linear-gradient(135deg, #0A1F1A 0%, #14453D 100%);
+
+  /* ---- RADII ---- */
+  --pp-radius-xs:   4px;    /* digit cells, inline pills */
+  --pp-radius-sm:   8px;    /* chips, inputs, small buttons */
+  --pp-radius:     14px;    /* default cards, CTAs */
+  --pp-radius-lg:  20px;    /* hero cards, vault */
+  --pp-radius-xl:  24px;    /* header collars, modals */
+  --pp-radius-pill: 999px;  /* trust pills, badges, tabs */
+
+  /* ---- SHADOWS (restrained) ---- */
+  --pp-shadow-sm:   0 2px 6px rgba(10,31,26,0.06);
+  --pp-shadow:      0 8px 24px rgba(10,31,26,0.12);
+  --pp-shadow-cta:  0 8px 24px rgba(10,31,26,0.30);
+  --pp-shadow-lift: 0 20px 60px rgba(0,0,0,0.45);
+
+  /* ---- SPACING (4pt base) ---- */
+  --pp-space-1:  4px;
+  --pp-space-2:  8px;
+  --pp-space-3: 12px;
+  --pp-space-4: 16px;
+  --pp-space-5: 20px;
+  --pp-space-6: 24px;
+  --pp-space-7: 32px;
+  --pp-space-8: 40px;
+  --pp-space-9: 52px;  /* iOS status-bar offset */
+
+  /* ---- TYPE FAMILIES ---- */
+  --pp-font-sans: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --pp-font-mono: 'JetBrains Mono', 'Courier New', monospace;
+
+  /* ---- SEMANTIC TYPE STYLES ---- */
+  --pp-display-1-size:   40px; --pp-display-1-weight: 900; --pp-display-1-leading: 1.05; --pp-display-1-tracking: -1.5px;
+  --pp-display-2-size:   36px; --pp-display-2-weight: 900; --pp-display-2-leading: 1.1;  --pp-display-2-tracking: -1px;
+  --pp-h1-size:          26px; --pp-h1-weight: 900;        --pp-h1-leading: 1.15;        --pp-h1-tracking: -0.8px;
+  --pp-h2-size:          22px; --pp-h2-weight: 800;        --pp-h2-leading: 1.2;         --pp-h2-tracking: -0.5px;
+  --pp-h3-size:          18px; --pp-h3-weight: 800;        --pp-h3-leading: 1.25;        --pp-h3-tracking: -0.3px;
+  --pp-body-size:        14px; --pp-body-weight: 500;      --pp-body-leading: 1.5;       --pp-body-tracking: 0;
+  --pp-body-sm-size:     12px; --pp-body-sm-weight: 500;   --pp-body-sm-leading: 1.5;
+  --pp-caption-size:     11px; --pp-caption-weight: 600;   --pp-caption-leading: 1.4;
+  --pp-eyebrow-size:     11px; --pp-eyebrow-weight: 700;   --pp-eyebrow-tracking: 0.8px;
+
+  --pp-money-size:       32px; --pp-money-weight: 900;     --pp-money-tracking: -1px;
+  --pp-money-sm-size:    22px; --pp-money-sm-weight: 900;  --pp-money-sm-tracking: -0.5px;
+  --pp-ussd-size:        28px; --pp-ussd-weight: 800;      --pp-ussd-tracking: 2px;
+}
+
+/* ============================================
+   SEMANTIC UTILITY CLASSES
+   ============================================ */
+
+body { font-family: var(--pp-font-sans); color: var(--pp-charcoal); background: var(--pp-cream); }
+
+.pp-display-1 { font-family: var(--pp-font-sans); font-size: var(--pp-display-1-size); font-weight: var(--pp-display-1-weight); line-height: var(--pp-display-1-leading); letter-spacing: var(--pp-display-1-tracking); }
+.pp-display-2 { font-family: var(--pp-font-sans); font-size: var(--pp-display-2-size); font-weight: var(--pp-display-2-weight); line-height: var(--pp-display-2-leading); letter-spacing: var(--pp-display-2-tracking); }
+.pp-h1 { font-size: var(--pp-h1-size); font-weight: var(--pp-h1-weight); line-height: var(--pp-h1-leading); letter-spacing: var(--pp-h1-tracking); }
+.pp-h2 { font-size: var(--pp-h2-size); font-weight: var(--pp-h2-weight); line-height: var(--pp-h2-leading); letter-spacing: var(--pp-h2-tracking); }
+.pp-h3 { font-size: var(--pp-h3-size); font-weight: var(--pp-h3-weight); line-height: var(--pp-h3-leading); letter-spacing: var(--pp-h3-tracking); }
+.pp-body { font-size: var(--pp-body-size); font-weight: var(--pp-body-weight); line-height: var(--pp-body-leading); }
+.pp-body-sm { font-size: var(--pp-body-sm-size); font-weight: var(--pp-body-sm-weight); line-height: var(--pp-body-sm-leading); }
+.pp-caption { font-size: var(--pp-caption-size); font-weight: var(--pp-caption-weight); line-height: var(--pp-caption-leading); color: var(--pp-stone); }
+.pp-eyebrow { font-size: var(--pp-eyebrow-size); font-weight: var(--pp-eyebrow-weight); letter-spacing: var(--pp-eyebrow-tracking); text-transform: uppercase; color: var(--pp-stone); }
+
+.pp-money { font-family: var(--pp-font-sans); font-size: var(--pp-money-size); font-weight: var(--pp-money-weight); letter-spacing: var(--pp-money-tracking); font-variant-numeric: tabular-nums; }
+.pp-money-sm { font-size: var(--pp-money-sm-size); font-weight: var(--pp-money-sm-weight); letter-spacing: var(--pp-money-sm-tracking); font-variant-numeric: tabular-nums; }
+.pp-ussd { font-family: var(--pp-font-mono); font-size: var(--pp-ussd-size); font-weight: var(--pp-ussd-weight); letter-spacing: var(--pp-ussd-tracking); color: var(--pp-lime); }
+
+/* ---- PRIMITIVES ---- */
+
+.pp-btn-primary {
+  background: var(--pp-lime); color: var(--pp-ink);
+  border: none; padding: 18px; border-radius: var(--pp-radius);
+  font-family: var(--pp-font-sans); font-size: 15px; font-weight: 900;
+  letter-spacing: -0.3px; cursor: pointer; transition: transform .1s, filter .2s;
+}
+.pp-btn-primary:hover { filter: brightness(1.05); }
+.pp-btn-primary:active { transform: scale(.98); }
+
+.pp-btn-dark {
+  background: var(--pp-ink); color: var(--pp-cream);
+  border: none; padding: 18px; border-radius: var(--pp-radius);
+  font-family: var(--pp-font-sans); font-size: 14px; font-weight: 800;
+  cursor: pointer; box-shadow: var(--pp-shadow-cta);
+}
+
+.pp-btn-emerald {
+  background: var(--pp-emerald); color: #fff;
+  border: none; padding: 16px; border-radius: var(--pp-radius);
+  font-family: var(--pp-font-sans); font-size: 14px; font-weight: 800;
+}
+
+.pp-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 6px 12px; border-radius: var(--pp-radius-pill);
+  font-size: 11px; font-weight: 700; letter-spacing: 0.2px;
+  background: rgba(255,255,255,0.08); color: var(--pp-cream);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.pp-badge-trinity {
+  display: inline-block; padding: 4px 10px; border-radius: var(--pp-radius-pill);
+  background: var(--pp-lime); color: var(--pp-ink);
+  font-size: 10px; font-weight: 800; letter-spacing: 0.3px;
+}
+
+.pp-card {
+  background: var(--pp-cream); border: 1.5px solid var(--pp-sand);
+  border-radius: var(--pp-radius); padding: 14px;
+}
+
+.pp-vault {
+  background: var(--pp-gradient-vault);
+  border-radius: var(--pp-radius-lg); padding: 20px;
+  color: var(--pp-cream);
+}
