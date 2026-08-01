@@ -2,9 +2,9 @@
  * Mock API client.
  *
  * This module is the ENTIRE backend seam. Every screen talks to it via the
- * `api.*` namespaces below; swapping to a real backend is a find-and-replace
- * of each method body with a `fetch(...)` call — the argument and return
- * shapes are locked by zod schemas in `@/domain/schema`.
+ * `api.*` namespaces below; a production adapter can replace each method
+ * body with a network call while preserving the zod-validated shapes in
+ * `@/domain/schema`.
  *
  * Provider attribution is baked into the internal function names so the
  * swap is literal: `lookupBVNViaDojah` becomes a Dojah REST call, etc.

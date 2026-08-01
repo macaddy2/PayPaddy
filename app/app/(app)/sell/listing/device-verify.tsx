@@ -1,11 +1,11 @@
 /**
- * Device IMEI Verification — Moat #4.
+ * Device IMEI verification for electronics listings.
  *
  * Checks the NCC (Nigerian Communications Commission) stolen-goods database
  * via the mock `api.device.verifyIMEIViaNCC`. Electronics listings are
  * blocked from publishing until IMEI passes.
  *
- * Canned failure: any IMEI starting with "999" is returned as stolen so
+ * Demo failure case: any IMEI starting with "999" is returned as stolen so
  * the error path can be exercised without a real backend.
  *
  * To find your IMEI: dial *#06# on the device.

@@ -39,7 +39,7 @@ export default function WelcomeScreen() {
         </Text>
       </View>
 
-      {/* ---- Moat highlights ---- */}
+      {/* ---- Trust protections ---- */}
       <View style={styles.features}>
         <FeatureRow icon="🪪" label="Trinity Verification — BVN + NIN + Face" />
         <FeatureRow icon="🏦" label="CBN-licensed escrow — not our pocket" />

@@ -1,7 +1,6 @@
 # PayPaddy — MVP App
 
-Nigerian escrow fintech. Universal escrow (commerce, contracts, bets, services)
-with four moat mechanics:
+Nigerian escrow fintech for protected deals, milestone releases, and two-party contracts.
 
 1. **Trinity Verification** — BVN + NIN + Liveness at signup.
 2. **Collateral Staking** — Silver (₦100K) or Gold (₦500K) locked by sellers before listing.
@@ -96,7 +95,7 @@ app/
       __tests__/
         money.test.ts          # unit tests — must stay green
     services/
-      api.ts                   # mock client (all providers, find-and-replace to go live)
+      api.ts                   # mock client and provider boundary
       fixtures.ts              # seed data (three PRD personas)
       logger.ts                # PII-masking logger (NDPR compliant)
       analytics.ts             # no-op track() stub (swap with Segment/Mixpanel)
@@ -117,13 +116,16 @@ app/
 
 ---
 
-## Route Map (happy paths)
+## Route Map
 
 **First-time buyer**
 `/welcome` → `/auth/phone` → `/auth/otp` → `/auth/trinity/bvn` → `/nin` → `/liveness` → `/success` → `/(app)/(tabs)`
 
 **Start a deal (buyer)**
 `/(tabs)` → `/deal/new` → `/deal/[id]` → `/deal/[id]/fund/method` → `/fund/virtual-account` → (wait) → `/deal/[id]` → `/complete` → `/receipt`
+
+**Create a two-party contract**
+`/(tabs)` → `/deal/new` → `/deal/[id]/invite` → `/deal/[id]/negotiate` → both parties endorse → fund → milestones → bilateral completion sign-off
 
 **Open a dispute (buyer)**
 `/deal/[id]` → `/dispute/open` → `/dispute/evidence` → `/dispute/resolved`
@@ -156,8 +158,8 @@ computeFees(grossKobo, tier)         // { grossKobo, escrowFeeKobo, safeguardKob
 - SafeGuard levy: 2% of the escrow fee → replenishes the buyer insurance pool
 
 **Deal status machine (`DealStatus` in `schema.ts`):**
-`draft` → `awaiting_funds` → `funded` → `in_progress` → `delivered` → `settled`
-with `disputed` as a branch off `funded`/`delivered` that terminates in `refunded` or `settled`.
+Legacy deals use `draft` → `awaiting_funds` → `funded` → `in_progress` → `delivered` → `settled`.
+Two-party deals add `awaiting_counterparty` → `viewed` → `negotiating` → `locked`, then use milestone delivery and bilateral completion sign-off before `settled`.
 
 ---
 
@@ -168,18 +170,18 @@ with `disputed` as a branch off `funded`/`delivered` that terminates in `refunde
 | Namespace | Key methods | Real-world swap |
 |---|---|---|
 | `api.trinity` | `lookupBVNViaDojah`, `lookupNINViaDojah`, `livenessViaSmileID` | NIBSS + NIMC + Smile ID |
-| `api.deals` | `list`, `get`, `create`, `fundVirtualAccountViaProvidus`, `confirmReceipt` | Own service + Paystack/Flutterwave |
+| `api.deals` | `list`, `get`, `create`, `invite`, `acceptInvite`, `proposeAmendment`, `endorseLock`, `signCompletion` | Own service + Paystack/Flutterwave |
 | `api.wallet` | `get`, `payoutViaNIP` | Own ledger + NIP out-transfer |
 | `api.agents` | `near`, `get`, `generateCashInCode` | Own agent network service |
 | `api.device` | `verifyIMEIViaNCC` | NCC stolen-goods API |
 | `api.disputes` | `open`, `get`, `resolveBuyerWins` | Own dispute engine |
 
-Canned failure paths:
+Demo failure cases:
 - BVN `00000000000` → verification fails
 - IMEI prefix `999` → flagged as stolen by NCC
 - Wallet `payoutViaNIP` with amount > balance → throws "Insufficient balance"
 
-To point at a real server, replace each method body in `api.ts` with `fetch(...)` calls.
+To connect a real server, keep these method signatures and replace the mock bodies with network calls.
 
 ---
 
@@ -207,9 +209,9 @@ const { seller, stake } = useSeller();
 
 ## Known Gaps (not in this MVP)
 
-- Push notifications, deep links from WhatsApp, and share-sheet wiring are stubbed.
-- The agents map is a placeholder tile — swap with react-native-maps when a Google Maps key is provisioned.
-- No analytics events yet — add `track()` calls once Segment/Mixpanel is picked.
+- Push notifications, deep links from WhatsApp, and share-sheet wiring are not connected.
+- The agents view uses a static map panel until a map provider and key are provisioned.
+- Analytics is intentionally a no-op until a provider is selected.
 - No real payments — wire Paystack charge webhook to transition `awaiting_funds → funded`.
 - No i18n — copy is English + Pidgin inline; extract to a string table before adding Yoruba/Hausa/Igbo.
 

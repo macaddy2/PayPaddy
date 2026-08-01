@@ -1,6 +1,6 @@
 # PayPaddy
 
-Nigerian escrow fintech — Universal escrow with four trust moats.
+Nigerian escrow fintech for protected deals, milestone releases, and two-party contracts.
 
 ## Getting started
 

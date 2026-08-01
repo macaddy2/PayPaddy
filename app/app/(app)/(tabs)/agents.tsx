@@ -1,7 +1,7 @@
 /**
  * Agents tab — nearby PayPaddy cash-in/cash-out agents.
  *
- * The map tile is a placeholder per the README ("stub tile, not react-native-maps
+ * The map panel is intentionally static until a map provider is configured (not react-native-maps
  * rendered — swap when Google Maps key is provisioned"). The agent list below
  * the stub is fully functional with the mock data.
  */
@@ -35,7 +35,7 @@ export default function AgentsTab() {
         <Text style={styles.sub}>Physical touchpoints for cash-in and withdrawal</Text>
       </View>
 
-      {/* Map placeholder — swap with react-native-maps when key is ready */}
+      {/* Static map panel until a map provider is configured. */}
       <View style={styles.mapStub}>
         <Text style={styles.mapIcon}>🗺</Text>
         <Text style={styles.mapText}>Map coming soon — Google Maps key needed</Text>

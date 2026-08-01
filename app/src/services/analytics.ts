@@ -1,5 +1,5 @@
 /**
- * Analytics stub.
+ * No-op analytics boundary for the mock app.
  *
  * Screens call `track(event, props)` at key conversion points. In MVP this is
  * a no-op so we don't ship without a provider. When Segment / Mixpanel is
