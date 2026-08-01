@@ -233,7 +233,7 @@ export const mvpText = StyleSheet.create({
 const styles = StyleSheet.create({
   eyebrow: {
     fontFamily: typography.family,
-    fontSize: 10,
+    fontSize: typography.caption.size,
     fontWeight: '800',
     letterSpacing: 0.8,
     textTransform: 'uppercase',
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
   },
   trustPillText: {
     fontFamily: typography.family,
-    fontSize: 10,
+    fontSize: typography.caption.size,
     fontWeight: '800',
     letterSpacing: 0.3,
   },
@@ -310,7 +310,7 @@ const styles = StyleSheet.create({
     minWidth: 96,
     padding: spacing.md,
     borderRadius: radii.sm,
-    backgroundColor: '#fff',
+    backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: colors.sand,
   },
@@ -342,12 +342,12 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   milestoneDotActive: { backgroundColor: colors.lime },
-  milestoneDotText: { fontFamily: typography.family, color: colors.ink, fontSize: 11, fontWeight: '900' },
+  milestoneDotText: { fontFamily: typography.family, color: colors.ink, fontSize: typography.caption.size, fontWeight: '900' },
   milestoneLabel: {
     marginTop: 5,
     fontFamily: typography.family,
     color: colors.stone,
-    fontSize: 10,
+    fontSize: typography.caption.size,
     fontWeight: '800',
   },
   milestoneLabelActive: { color: colors.emerald },
@@ -365,7 +365,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.md,
     borderRadius: radii.sm,
-    backgroundColor: '#fff',
+    backgroundColor: colors.white,
     padding: spacing.md,
     borderWidth: 1,
     borderColor: colors.sand,
@@ -397,7 +397,7 @@ const styles = StyleSheet.create({
   integrationCard: {
     flexDirection: 'row',
     gap: spacing.md,
-    backgroundColor: '#fff',
+    backgroundColor: colors.white,
     borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.sand,
@@ -435,7 +435,7 @@ const styles = StyleSheet.create({
   secondaryAction: {
     minHeight: 48,
     borderRadius: radii.sm,
-    backgroundColor: '#fff',
+    backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: colors.sand,
     alignItems: 'center',

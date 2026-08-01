@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
     fontWeight: typography.body.weight,
   },
   dangerLabel: {
-    color: '#fff',
+    color: colors.white,
     fontSize: typography.body.size,
     fontWeight: typography.body.weight,
   },

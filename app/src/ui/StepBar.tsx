@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.stone,
   },
-  dotNumberActive: { color: '#fff' },
+  dotNumberActive: { color: colors.white },
   check: { fontSize: 12, fontWeight: '700', color: colors.ink },
   label: {
     marginTop: spacing.xs,
