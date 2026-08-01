@@ -101,7 +101,7 @@ export type DealCategoryKey = (typeof DEAL_CATEGORIES)[number]['key'];
 
 /**
  * Mock-only trigger values that deliberately exercise failure paths. Keeping
- * them in one file makes the "canned failures" documentation live.
+ * them in one file keeps the demo failure cases explicit and testable.
  */
 export const MOCK_TRIGGERS = {
   // Passing this BVN to the mock makes the lookup fail.

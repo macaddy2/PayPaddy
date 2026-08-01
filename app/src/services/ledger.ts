@@ -1,8 +1,8 @@
 /**
  * Per-deal append-only event log with a hash chain.
  *
- * This is the "off-chain smart contract" provenance layer: every state
- * transition on a Deal (or one of its milestones) is recorded as a
+ * This is the mock audit layer: every state transition on a Deal (or one of
+ * its milestones) is recorded as a
  * `LedgerEntry`, and each entry carries the hash of the previous one so
  * the chain is tamper-evident — flip a byte anywhere mid-history and every
  * subsequent `hash` field is wrong.

@@ -168,7 +168,7 @@ export const Deal = z.object({
 export type Deal = z.infer<typeof Deal>;
 
 // -------------------------
-// Milestones + Ledger ("off-chain smart contract" — see services/ledger.ts)
+// Milestones and the append-only audit ledger.
 // -------------------------
 
 export const MilestoneStatus = z.enum([

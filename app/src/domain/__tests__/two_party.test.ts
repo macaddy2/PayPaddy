@@ -48,7 +48,7 @@ async function createBuyerInitiatedDeal(opts?: { fundingMode?: 'fund_first' | 'f
   });
 }
 
-describe('two-party contract lifecycle — happy path', () => {
+describe('two-party contract lifecycle — complete flow', () => {
   it('full spine: invite → accept → amend → endorse → fund → milestones → bilateral sign-off → settled', async () => {
     const deal0 = await createBuyerInitiatedDeal();
     expect(deal0.status).toBe('draft');
