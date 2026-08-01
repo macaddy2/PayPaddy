@@ -25,6 +25,7 @@ export const colors = {
 
   // Neutrals
   cream: '#FAF7F2', // light background
+  white: '#FFFFFF', // elevated cards and text on saturated status actions
   sand: '#F0EBE1', // divider, muted border
   stone: '#8B8680', // muted text
   charcoal: '#1C1C1C', // near-black body text on light surfaces
